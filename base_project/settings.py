@@ -1,7 +1,9 @@
 import os
+import sys
 from pathlib import Path
 from django.db.models import Field
 
+IS_RUNSERVER = 'runserver' in sys.argv
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = os.path.realpath(os.path.dirname(__file__))
 PROJECT_NAME = os.path.basename(PROJECT_ROOT)
@@ -34,10 +36,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # libraries
-    'django_cleanup.apps.CleanupConfig', # filefield가 update 될 때 기존 파일 삭제
+    'django_cleanup.apps.CleanupConfig',  # filefield가 update 될 때 기존 파일 삭제
     'rest_framework',
     'ckeditor',
-    
+
     # apps
     'account',
 ]
@@ -151,7 +153,7 @@ SILENCED_SYSTEM_CHECKS = ['rest_framework.W001']
 
 LOGIN_URL = '/admin/login/'
 
-
+LOGFILE = 'general.log'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -204,11 +206,8 @@ LOGGING = {
         },
         'file': {
             'level': 'DEBUG',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': 'general.log',
-            'when': 'midnight',
-            'interval': 1,
-            'backupCount': 10,
+            # django를 runserver로 실행시켰을 때는 LogFileHandler 사용
+            'class': f'{PROJECT_NAME}.logger.{"LogFileHandler" if IS_RUNSERVER else "TimedRotatingFileHandler"}',
             'formatter': 'file',
         },
     },
@@ -217,11 +216,11 @@ LOGGING = {
         'django': {
             'handlers': ['no_output_console']
         },
-        
+
         'django.server': {
             'handlers': ['console', 'file'],
         },
-        
+
         'django.request': {
             'handlers': ['console', 'file'],
         },
