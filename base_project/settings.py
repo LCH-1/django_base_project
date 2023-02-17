@@ -143,3 +143,100 @@ SILENCED_SYSTEM_CHECKS = ['rest_framework.W001']
 
 LOGIN_URL = '/admin/login/'
 
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'debug': {
+            'format': '[{filename}:{lineno}] >> {message}',
+            'style': '{',
+        },
+        'console': {
+            'format': '[{asctime}.{msecs:03.0f}] {message}',
+            # 'format': '[{asctime}.{msecs:03.0f}] {name} {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+        'simple': {
+            'format': '{message}',
+            'style': '{',
+            'datefmt': '-',
+        },
+        'file': {
+            'format': '[{asctime}] | {levelname:7} | [{filename}:{funcName}:{lineno}] | >> {message}',
+            'style': '{',
+        },
+    },
+
+    'handlers': {
+        'console': {
+            'class': f'{PROJECT_NAME}.logger.DefaultLogHandler',
+            'formatter': 'console',
+            'level': 'DEBUG',
+        },
+        'no_output_console': {
+            'class': f'{PROJECT_NAME}.logger.NoOutputLogHandler',
+            'formatter': 'console',
+        },
+        'debug': {
+            'class': f'{PROJECT_NAME}.logger.DefaultLogHandler',
+            'formatter': 'debug',
+            'level': 'DEBUG',
+        },
+        'request_log': {
+            'class': f'{PROJECT_NAME}.logger.DefaultLogHandler',
+            'formatter': 'simple',
+            'level': 'DEBUG',
+        },
+        'sql_query': {
+            'class': f'{PROJECT_NAME}.logger.DefaultLogHandler',
+            'formatter': 'simple',
+            'level': 'DEBUG',
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': 'general.log',
+            'when': 'midnight',
+            'interval': 1,
+            'backupCount': 10,
+            'formatter': 'file',
+        },
+    },
+    'loggers': {
+        # default disable
+        'django': {
+            'handlers': ['no_output_console']
+        },
+        
+        'django.server': {
+            'handlers': ['console', 'file'],
+        },
+        
+        'django.request': {
+            'handlers': ['console', 'file'],
+        },
+    },
+}
+
+if DEBUG:
+    LOGGING['loggers'].update({
+        # logger.debug() log
+        'console_debug': {
+            'level': 'DEBUG',
+            'handlers': ['debug', 'file'],
+        },
+
+        # middleware request log
+        'request_log': {
+            'level': 'DEBUG',
+            'handlers': ['request_log', 'file'],
+        },
+
+        # database query log
+        # 'django.db.backends': {
+        #     'handlers': ['sql_query', ],
+        #     'level': 'DEBUG',
+        # },
+    })
