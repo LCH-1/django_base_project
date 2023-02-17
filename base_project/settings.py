@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     'django_cleanup.apps.CleanupConfig', # filefield가 update 될 때 기존 파일 삭제
     'rest_framework',
     'ckeditor',
+    
+    # apps
+    'account',
 ]
 
 MIDDLEWARE = [
@@ -76,8 +79,6 @@ WSGI_APPLICATION = f'{PROJECT_NAME}.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-
 # 환경변수에 POSTGRESQL_DB가 있을 경우 postgres에 연결 시도
 if POSTGRES_DB := os.environ.get('POSTGRES_DB', ''):
     DATABASES = {
@@ -113,6 +114,8 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+AUTH_USER_MODEL = "account.User"
 
 LANGUAGE_CODE = 'ko-kr'
 
