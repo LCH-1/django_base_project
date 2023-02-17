@@ -6,7 +6,7 @@ from account.models import User
 
 class UserCreationForm(forms.ModelForm):
     '''사용자 생성 폼'''
-    
+
     email = forms.CharField(
         label='이메일',
         widget=forms.TextInput(
@@ -42,7 +42,6 @@ class UserCreationForm(forms.ModelForm):
         model = User
         fields = ('email', )
 
-
     def clean_password2(self):
         # 두 비밀번호 입력 일치 확인
         password1 = self.cleaned_data.get("password1")
@@ -65,7 +64,7 @@ class UserCreationForm(forms.ModelForm):
 
 class UserChangeForm(forms.ModelForm):
     '''비밀번호 변경 폼'''
-    
+
     password = ReadOnlyPasswordHashField(
         label='Password',
         help_text=("Raw passwords are not stored, so there is no way to see \

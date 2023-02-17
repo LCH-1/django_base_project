@@ -8,6 +8,7 @@ from django.conf import settings
 
 MEDIA_URL = settings.MEDIA_URL
 
+
 class RequestLogMiddleware:
     """Request / Response Logging"""
 

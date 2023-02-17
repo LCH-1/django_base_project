@@ -14,20 +14,20 @@ class UserAdmin(BaseUserAdmin):
 
     list_display_links = ('email', )
     list_filter = ('is_admin', 'is_active', )
-    
+
     fieldsets = (
         ('Personal info', {'fields': ('email', 'password', 'fullname', )}),
         ('Status', {'fields': ('is_active', )}),
         ('Permissions', {'fields': ('is_admin', )}),
     )
-    
+
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
             'fields': ('email', 'password1', 'password2', 'is_admin', )}
          ),
     )
-    
+
     search_fields = ('email', 'fullname', )
     ordering = ('-id',)
 
@@ -40,6 +40,7 @@ class UserAdmin(BaseUserAdmin):
             return ('email', 'join_date', )
         else:
             return ('join_date', )
+
 
 admin.site.register(User, UserAdmin)
 
