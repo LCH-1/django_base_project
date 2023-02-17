@@ -11,7 +11,7 @@ Field.default_error_messages.update({
     "unique": "이미 존재하는 %(field_label)s입니다.",
 })
 
-SECRET_KEY = ''
+SECRET_KEY = 'a'
 
 DEBUG = os.environ.get('DEBUG', '1') == '1'
 
@@ -48,6 +48,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+if DEBUG:
+    MIDDLEWARE.append(f'{PROJECT_NAME}.middleware.RequestLogMiddleware')
+
+MIDDLEWARE.append(f'{PROJECT_NAME}.middleware.ResponseFormattingMiddleware')
 
 ROOT_URLCONF = f'{PROJECT_NAME}.urls'
 
