@@ -1,0 +1,41 @@
+name: CD
+
+on:
+  push:
+    branches: 
+      - main
+
+jobs:
+  deploy:
+    name: CD Pipeline
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Check if requirements is changed
+        id: changed-files-specific
+        # https://github.com/tj-actions/changed-files
+        uses: tj-actions/changed-files@v35.5.3
+        with:
+          # requirements.txt 파일 변경 탐지
+          files: requirements.txt
+      
+      - name: Deploy
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          key: ${{ secrets.EC2_KEY }}
+          host: ${{ secrets.EC2_IP }}
+          username: ${{ secrets.EC2_USERNAME }}
+          port: 22
+          script: |
+            cd ~/project/backend
+            git pull https://${{ secrets.AUTHENTICATE }}@github.com/${{ github.repository }} main
+            cd ../
+            if [[ ${{ steps.changed-files-specific.outputs.any_changed }} == true ]]; then
+              sudo docker compose up --build -d backend
+            else
+              sudo docker compose restart backend
+            fi
