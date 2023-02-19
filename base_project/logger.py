@@ -80,5 +80,15 @@ class CustomLogger(logging.Logger):
         return super().findCaller(stack_info, stacklevel=3)
 
 
+class FilepathFormatter(logging.Formatter):
+    def format(self, record):
+        try:
+            record.filepath = "/".join(record.pathname.rsplit("\\", 2)[1:])
+        except:
+            record.filepath = record.filename
+
+        return super().format(record)
+
+
 default_logger = CustomLogger("console_debug")
 request_logger = CustomLogger("request_log")

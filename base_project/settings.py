@@ -22,7 +22,7 @@ if DEBUG:
     CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000", ]
 
 else:
-    ALLOWED_HOSTS = []
+    ALLOWED_HOSTS = ['']
     CSRF_TRUSTED_ORIGINS = []
 
 CORS_ORIGIN_WHITELIST = CSRF_TRUSTED_ORIGINS
@@ -157,9 +157,18 @@ LOGFILE = 'general.log'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    "filters": {
+        "require_debug_false": {
+            "()": "django.utils.log.RequireDebugFalse",
+        },
+        "require_debug_true": {
+            "()": "django.utils.log.RequireDebugTrue",
+        },
+    },
     'formatters': {
-        'debug': {
-            'format': '[{filename}:{lineno}] >> {message}',
+        'debug_console': {
+            '()': f'{PROJECT_NAME}.logger.FilepathFormatter',
+            'format': '[{filepath}:{lineno}] >> {message}',
             'style': '{',
         },
         'console': {
@@ -174,7 +183,8 @@ LOGGING = {
             'datefmt': '-',
         },
         'file': {
-            'format': '[{asctime}] | {levelname:7} | [{filename}:{funcName}:{lineno}] | >> {message}',
+            '()': f'{PROJECT_NAME}.logger.FilepathFormatter',
+            'format': '[{asctime}] | {levelname:7} | [{filepath}:{funcName}:{lineno}] | >> {message}',
             'style': '{',
         },
     },
@@ -189,9 +199,9 @@ LOGGING = {
             'class': f'{PROJECT_NAME}.logger.NoOutputLogHandler',
             'formatter': 'console',
         },
-        'debug': {
+        'debug_console': {
             'class': f'{PROJECT_NAME}.logger.DefaultLogHandler',
-            'formatter': 'debug',
+            'formatter': 'debug_console',
             'level': 'DEBUG',
         },
         'request_log': {
@@ -205,10 +215,10 @@ LOGGING = {
             'level': 'DEBUG',
         },
         'file': {
-            'level': 'DEBUG',
             # django를 runserver로 실행시켰을 때는 LogFileHandler 사용
             'class': f'{PROJECT_NAME}.logger.{"LogFileHandler" if IS_RUNSERVER else "TimedRotatingFileHandler"}',
             'formatter': 'file',
+            'level': 'DEBUG',
         },
     },
     'loggers': {
@@ -224,20 +234,18 @@ LOGGING = {
         'django.request': {
             'handlers': ['console', 'file'],
         },
-    },
-}
 
-if DEBUG:
-    LOGGING['loggers'].update({
         # logger.debug() log
         'console_debug': {
             'level': 'DEBUG',
-            'handlers': ['debug', 'file'],
+            "filters": ["require_debug_true"],
+            'handlers': ['debug_console', 'file'],
         },
 
         # middleware request log
         'request_log': {
             'level': 'DEBUG',
+            "filters": ["require_debug_true"],
             'handlers': ['request_log', 'file'],
         },
 
@@ -246,4 +254,5 @@ if DEBUG:
         #     'handlers': ['sql_query', ],
         #     'level': 'DEBUG',
         # },
-    })
+    },
+}
