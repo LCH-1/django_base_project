@@ -80,10 +80,19 @@ class CustomLogger(logging.Logger):
         return super().findCaller(stack_info, stacklevel=3)
 
 
-class FilepathFormatter(logging.Formatter):
+class DefaultFormatter(logging.Formatter):
     def format(self, record):
         try:
+            from .middleware import local
+            request = getattr(local, 'django_request', None)
+            record.userinfo = str(request.user)
+
+        except:
+            record.userinfo = '-'
+
+        try:
             record.filepath = "/".join(record.pathname.rsplit("\\", 2)[1:])
+
         except:
             record.filepath = record.filename
 

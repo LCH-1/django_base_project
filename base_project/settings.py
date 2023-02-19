@@ -52,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    f'{PROJECT_NAME}.middleware.LoggedInUserMiddleware',  # logger formatter에서 request를 받아오기 위해 사용
 ]
 
 if DEBUG:
@@ -167,12 +168,13 @@ LOGGING = {
     },
     'formatters': {
         'debug_console': {
-            '()': f'{PROJECT_NAME}.logger.FilepathFormatter',
-            'format': '[{filepath}:{lineno}] >> {message}',
+            '()': f'{PROJECT_NAME}.logger.DefaultFormatter',
+            'format': '[{filepath}:{lineno}] | {userinfo} >> {message}',
             'style': '{',
         },
         'console': {
-            'format': '[{asctime}.{msecs:03.0f}] {message}',
+            '()': f'{PROJECT_NAME}.logger.DefaultFormatter',
+            'format': '[{asctime}.{msecs:03.0f}] {message} | {userinfo}',
             # 'format': '[{asctime}.{msecs:03.0f}] {name} {message}',
             'style': '{',
             'datefmt': '%Y-%m-%d %H:%M:%S',
@@ -183,8 +185,8 @@ LOGGING = {
             'datefmt': '-',
         },
         'file': {
-            '()': f'{PROJECT_NAME}.logger.FilepathFormatter',
-            'format': '[{asctime}] | {levelname:7} | [{filepath}:{funcName}:{lineno}] | >> {message}',
+            '()': f'{PROJECT_NAME}.logger.DefaultFormatter',
+            'format': '[{asctime}] | {levelname:7} | [{filepath}:{funcName}:{lineno}] | {userinfo} | >> {message}',
             'style': '{',
         },
     },

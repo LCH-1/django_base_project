@@ -1,12 +1,17 @@
 import time
 import json
-import logging
-from pprint import pprint
-from rest_framework.status import is_client_error, is_server_error
-from .logger import request_logger as logger
+import threading
+
 from django.conf import settings
+from django.contrib.auth import get_user
+
+from rest_framework.status import is_client_error, is_server_error
+
+from .logger import request_logger as logger
+
 
 MEDIA_URL = settings.MEDIA_URL
+local = threading.local()
 
 
 class RequestLogMiddleware:
@@ -137,3 +142,13 @@ class ResponseFormattingMiddleware:
             "origin": response.data,
             "processed_response": self.get_process_response(response)
         }
+
+
+class LoggedInUserMiddleware:
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        setattr(local, 'django_request', request)
+        return self.get_response(request)
