@@ -29,7 +29,7 @@ class User(AbstractBaseUser):
     is_admin = models.BooleanField("admin 여부", default=False)
     join_date = models.DateField("가입일", auto_now_add=True)
     phone = models.CharField("핸드폰 번호", validators=[PHONE_VALIDATOR], unique=True, max_length=20)
-    profile_image = models.FileField("이력서 사진", upload_to=FilenameObfusecate("account/user/profile_image"), null=True, blank=True)
+    profile_image = models.FileField("프로필 사진", upload_to=FilenameObfusecate("account/user/profile_image"), null=True, blank=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
