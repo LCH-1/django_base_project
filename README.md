@@ -51,4 +51,3 @@
             .select_related(*get_select_related_fields(MyModel)) \
             .prefetch_related(*get_prefetch_related_fields(MyModel))
     ```
-    (TODO: 현재는 지정한 모델의 필드만 리턴하고 있지만, 필드들을 재귀적으로 탐색하며 related field들 또한 리턴하도록 추가 할 예정입니다.)
