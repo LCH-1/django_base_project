@@ -43,6 +43,9 @@ class RequestLogMiddleware:
         if is_logging:
             try:
                 req_body = json.loads(request.body.decode("utf-8")) if request.body else {}
+                for k in req_body:
+                    if "password" in k:
+                        req_body[k] = "#### Password ####"
             except:
                 try:
                     splited_request_body = request.body.split(b"\r")
