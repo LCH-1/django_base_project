@@ -128,6 +128,7 @@ class ResponseFormattingMiddleware:
                 break
 
             if isinstance(data, list):
+                data = [x for x in data if x]
                 data = data[0]
                 if data == "이 필드는 필수 항목입니다.":
                     data = f"{data_key}는 필수 항목입니다."
