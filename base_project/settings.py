@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'ckeditor',
 
     # apps
-    'account',
+    'user',
 ]
 
 MIDDLEWARE = [
@@ -118,7 +118,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = "account.User"
+AUTH_USER_MODEL = "user.User"
 
 LANGUAGE_CODE = 'ko-kr'
 
