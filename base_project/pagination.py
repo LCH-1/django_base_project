@@ -1,5 +1,6 @@
 from rest_framework import pagination
 from rest_framework.response import Response
+from functools import lru_cache
 
 
 class PageNumberPagination(pagination.PageNumberPagination):
@@ -15,3 +16,8 @@ class PageNumberPagination(pagination.PageNumberPagination):
             "page_size": self.page.paginator.per_page,
             "results": data,
         })
+
+
+@lru_cache
+def get_pagination_class(page_size):
+    return type('DynamicPageNumberPagination', (PageNumberPagination, ), {"page_size": page_size})
