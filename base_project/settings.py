@@ -13,7 +13,7 @@ Field.default_error_messages.update({
     "unique": "이미 존재하는 %(field_label)s입니다.",
 })
 
-SECRET_KEY = 'a'
+SECRET_KEY = os.environ.get('SECRET_KEY', ' ')
 
 DEBUG = os.environ.get('DEBUG', '1') == '1'
 
