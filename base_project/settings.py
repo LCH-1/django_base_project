@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from django.db.models import Field
 
-IS_RUNSERVER = 'runserver' in sys.argv
+IS_RUNSERVER = 'runserver' in sys.argv or sys.argv[0].rsplit("\\", maxsplit=1)[-1] == 'uvicorn'
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = os.path.realpath(os.path.dirname(__file__))
 PROJECT_NAME = os.path.basename(PROJECT_ROOT)
@@ -42,6 +42,7 @@ INSTALLED_APPS = [
 
     # apps
     'user',
+    'fileserver',
 ]
 
 MIDDLEWARE = [
@@ -150,7 +151,6 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
-SILENCED_SYSTEM_CHECKS = ['rest_framework.W001']
 
 LOGIN_URL = '/admin/login/'
 
