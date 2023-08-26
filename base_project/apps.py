@@ -2,10 +2,7 @@ from suit.apps import DjangoSuitConfig
 from suit.menu import ParentItem, ChildItem
 
 
-# https://github.com/farridav/django-jazzmin
-# https://github.com/darklow/django-suit
-# pip install django-suit-v2-pm
-# https://v2.djangosuit.com/admin/demo/continent/
+# https://django-suit.readthedocs.io/en/develop/configuration.html
 class SuitConfig(DjangoSuitConfig):
     layout = 'vertical'  # horizontal(default) or vertical
     menu = (

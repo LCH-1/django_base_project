@@ -8,9 +8,8 @@ from urllib.parse import quote
 from pathlib import _PosixFlavour, _WindowsFlavour
 from pathlib import Path as PathOrigin
 from pathlib import PurePath as PurePathOrigin
-from django.http import Http404, HttpResponse, StreamingHttpResponse, FileResponse
+from django.http import Http404, HttpResponse, FileResponse
 
-# from django.views.static import serve
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
