@@ -1,10 +1,13 @@
 asgiref==3.6.0
 autopep8==2.0.1
+click==8.1.7
+colorama==0.4.6
 Django==4.1.7
 django-ckeditor==6.5.1
 django-cleanup==7.0.0
 django-js-asset==2.0.0
 djangorestframework==3.14.0
+h11==0.14.0
 markdown-it-py==2.1.0
 mdurl==0.1.2
 pycodestyle==2.10.0
@@ -13,3 +16,4 @@ pytz==2022.7.1
 rich==13.3.1
 sqlparse==0.4.3
 tzdata==2022.7
+uvicorn==0.23.2

@@ -18,6 +18,13 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
+
+    if sys.argv[1] == 'runserver':
+        import subprocess
+        from django.conf import settings
+
+        subprocess.run(['uvicorn', f'{settings.PROJECT_NAME}.asgi:application', '--reload', '--host', '0.0.0.0'], check=False)
+
     execute_from_command_line(sys.argv)
 
 
