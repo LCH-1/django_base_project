@@ -67,7 +67,42 @@ class OneToOneField(CheckVerboseNameAttributeMixin, models.OneToOneField):
 
 
 class FileField(CheckVerboseNameAttributeMixin, models.FileField):
-    pass
+    def __init__(self, *args, **kwargs):
+        self.protected = kwargs.pop('protected', False)
+        self._upload_to = kwargs.pop('upload_to', None)
+
+        super().__init__(*args, **kwargs)
+
+    def generate_filename(self, instance, filename):
+        # app_name = instance._meta.app_label
+        model_name = instance._meta.model_name
+        field_name = self.name
+
+        ext = filename.split('.')[-1]
+        filename = f'{uuid.uuid4().hex}.{ext}'
+        fullpath = f"{model_name}/{field_name}/{filename}"
+
+        return f"protected/{fullpath}" if self.protected else fullpath
+
+    def contribute_to_class(self, cls, name, **kwargs):
+        super().contribute_to_class(cls, name, **kwargs)
+        self._check_unsupported_options(cls)
+        self._check_protected_valid(cls)
+
+    def _check_unsupported_options(self, model):
+        assert not self._upload_to, f"{model.__name__}.{self.name} / upload_to option is not supported"
+
+    def _check_protected_valid(self, model):
+        assert isinstance(self.protected, bool), \
+            f"{model.__name__}.{self.name} / FileField.protected must be bool, not {type(self.protected)}"
+
+        has_permission_method = hasattr(model, f"has_{self.name}_permission")
+
+        assert (self.protected, has_permission_method) != (True, False), \
+            f"{model.__name__}.{self.name} is set to protected=True, model must have has_{self.name}_permission method."
+
+        assert (self.protected, has_permission_method) != (False, True), \
+            f"{model.__name__}.{self.name} is set to protected=False, model must not have has_{self.name}_permission method."
 
 
 class TextField(CheckVerboseNameAttributeMixin, models.TextField):
