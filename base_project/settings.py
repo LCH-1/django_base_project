@@ -4,6 +4,7 @@ from pathlib import Path
 from django.db.models import Field
 
 IS_RUNSERVER = 'runserver' in sys.argv or sys.argv[0].rsplit("\\", maxsplit=1)[-1] == 'uvicorn'
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = os.path.realpath(os.path.dirname(__file__))
 PROJECT_NAME = os.path.basename(PROJECT_ROOT)
@@ -44,6 +45,31 @@ INSTALLED_APPS = [
     'user',
     'fileserver',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        f'{PROJECT_NAME}.permissions.IsAuthenticated'
+    ],
+
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser'
+    ],
+    # 'PAGE_SIZE': 10,
+}
+
+if DEBUG:
+    REST_FRAMEWORK['DEFAULT_SCHEMA_CLASS'] = 'drf_spectacular.openapi.AutoSchema'
+    INSTALLED_APPS += [
+        'drf_spectacular_sidecar',
+        'drf_spectacular',
+    ]
+    SPECTACULAR_SETTINGS = {
+        'SWAGGER_UI_DIST': 'SIDECAR',
+        'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+        'REDOC_DIST': 'SIDECAR',
+    }
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -131,25 +157,19 @@ USE_L10N = True
 USE_TZ = False  # timezone을 사용하지 않음
 
 MEDIA_URL = 'api/fileserver/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_DIR = 'media'
+MEDIA_ROOT = os.path.join(BASE_DIR, MEDIA_DIR)
+
+""" sendfile start """
+# SENDFILE_BACKEND = ''
+SENDFILE_ROOT = MEDIA_ROOT
+SENDFILE_URL = '/protected'
+""" sendfile end """
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'static'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        f'{PROJECT_NAME}.permissions.IsAuthenticated'
-    ],
-
-    'DEFAULT_PARSER_CLASSES': [
-        'rest_framework.parsers.JSONParser',
-        'rest_framework.parsers.FormParser',
-        'rest_framework.parsers.MultiPartParser'
-    ],
-    'PAGE_SIZE': 10,
-}
 
 
 LOGIN_URL = '/admin/login/'
