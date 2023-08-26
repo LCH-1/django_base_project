@@ -29,6 +29,7 @@ else:
 CORS_ORIGIN_WHITELIST = CSRF_TRUSTED_ORIGINS
 
 INSTALLED_APPS = [
+    f'{PROJECT_NAME}.apps.SuitConfig',  # for admin theme
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
