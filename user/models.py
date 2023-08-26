@@ -1,6 +1,6 @@
-from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 
+from base_project import models
 from base_project.validators import PHONE_VALIDATOR
 from base_project.utils import FilenameObfusecate
 
