@@ -4,7 +4,6 @@ import uuid
 from datetime import datetime
 
 from django.utils.deconstruct import deconstructible
-from django.db import models
 
 
 @deconstructible
@@ -48,42 +47,6 @@ def wa(kstr):
 def en(kstr):
     end = "은" if ends_with_jong(kstr) else "는"
     return f'{kstr}{end}'
-
-
-def set_default_error_messages(model, fields, extra_kwargs):
-    if fields == "__all__":
-        fields = [x.name for x in model._meta.get_fields()]
-
-    for field_name in fields:
-        field_dict = extra_kwargs.get(field_name)
-
-        try:
-            field = getattr(model, field_name).field
-        except AttributeError:
-            continue
-
-        verbose_name = field.verbose_name
-
-        if isinstance(field, models.FileField):
-            message = '업로드'
-
-        else:
-            message = '입력'
-
-        default_error_messages = {
-            'blank': f'{ul(verbose_name)} {message}해주세요.',
-            'required': f'{ul(verbose_name)} {message}해주세요.',
-            'invalid': f'알맞은 형식의 {ul(verbose_name)} {message}해주세요.',
-        }
-
-        if field_dict:
-            field_dict.setdefault('error_messages', {})
-            field_dict['error_messages'] = default_error_messages | field_dict['error_messages']
-
-        else:
-            extra_kwargs[field_name] = {'error_messages': default_error_messages}
-
-    return extra_kwargs
 
 
 def get_select_related_fields(model):

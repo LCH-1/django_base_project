@@ -1,4 +1,4 @@
-from rest_framework import serializers
+from base_project import serializers
 from user.models import User
 
 

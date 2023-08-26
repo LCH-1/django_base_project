@@ -17,12 +17,17 @@
 * ## router.py
   * **CustomRouter** : DefaultRouter를 상속받아 viewsets의 router를 지정할 때 url 구조를 변경시킨 router입니다. 로그인 한 사용자 본인의 데이터를 다룰 때와 같이 model의 pk를 지정하지 않고 CRUD를 다룰 때 사용됩니다.
   
-* ## serializer.py
+* ## serializers.py
+  * **ModelSerializer** : ModelSerializer를 상속받으며, error message를 기본적으로 설정해줍니다.
   * **WritableSerializerMethodField** : SerializerMethodField를 상속받으며, 기본적으로 read_only 속성으로만 사용 가능한 것과는 다르게 read/write 모두 가능합니다.
   * **PrimaryKeyRelatedWriteField** : PrimaryKeyRelatedField를 상속받으며, model에서 fk 혹은 oto으로 정의된 필드의 id를 지정할 때 사용됩니다.
+
+* ## fields.py
+  * **FileField** : serializer를 통해 직렬화 될 때 파일의 url의 형태를 다르게 지정합니다.
 
 * ## validator.py
   * **PHONE_VALIDATOR** : 핸드폰번호의 유효성을 검증합니다.
 
 * ## pagination.py
   * **PageNumberPagination** : PageNumberPagination을 상속받으며, pagination에 필요한 정보들을 함께 리턴합니다.
+  * **get_pagination_class** : pagi_size를 임의로 지정해 동적으로 PageNumberPagination를 생성합니다.
