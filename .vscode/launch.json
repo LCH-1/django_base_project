@@ -9,10 +9,13 @@
             "type": "python",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "program": "manage.py",
+            // "program": "manage.py",
+            "module": "uvicorn",
             "args": [
-                "runserver",
-                "0.0.0.0:8000"
+                "acs.asgi:application",
+                 "--reload",
+                 "--host",
+                 "0.0.0.0"
             ],
             "django": true,
             "justMyCode": true
