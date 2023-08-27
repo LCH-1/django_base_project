@@ -1,6 +1,25 @@
 # django base project<br>
 새로운 장고 프로젝트를 시작할 때 기반으로 사용 하기 위한 프로젝트 <br><br>
 
+## 최초 환경 설정
+```shell
+# base_project폴더를 사용할 project 이름으로 변경
+# 프로젝트 문자 전체 검색에서 base_project  -> 사용할 project 이름으로 모두 변경
+
+pip install -r requirements.txt
+python manage.py makemigrations
+python manage.py migrate
+```
+
+## 실행 방법
+```shell
+python manage.py runserver
+```
+
+## API 명세
+ * http://localhost:8000/swagger/
+ * http://localhost:8000/redoc/
+
 ## 기능
 * ## fields.py
   * **FileField** : serializer를 통해 직렬화 될 때 파일의 url의 형태를 다르게 지정합니다.
