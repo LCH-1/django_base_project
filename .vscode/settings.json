@@ -1,0 +1,7 @@
+{
+    "pylint.args": [
+        "--disable=W0012,W0614,C0303,C0111,C0411,W0401,W0702,C0321,C0301,C0103,C0413,E0401,W0106,E0611,W0613,W0611,R0901,W0511,R0903,R0903,W0105,W1113,C0114,C0115,C0116,W2402,E0013,W0212,W0201,C0415",
+        "--load-plugins=pylint_django",
+        "--django-settings-module=base_project.settings",
+    ],
+}
