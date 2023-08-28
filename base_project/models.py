@@ -51,7 +51,10 @@ class CheckRelatedNameAttributeMixin:
 
 
 class CharField(CheckVerboseNameAttributeMixin, models.CharField):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.choices and self.default == models.fields.NOT_PROVIDED:
+            self.default = self.choices[0][0]
 
 
 class ForeignKey(CheckVerboseNameAttributeMixin, CheckRelatedNameAttributeMixin, models.ForeignKey):
