@@ -1,5 +1,7 @@
 from functools import partial
-from django.contrib.admin import helpers, ModelAdmin
+
+from django.contrib import admin
+from django.contrib.admin import helpers, TabularInline, StackedInline, site
 from django.contrib.admin.options import InlineModelAdmin
 from django.contrib.admin.utils import (flatten_fieldsets, unquote)
 from django.db import models
@@ -9,11 +11,17 @@ from django.forms.formsets import all_valid
 from django.forms.models import BaseModelFormSet, modelformset_factory
 from django.utils.encoding import force_str
 from django.utils.safestring import mark_safe
-from django.utils.translation import gettext as _
+# from django.utils.translation import gettext as _
 from django.core.exceptions import PermissionDenied, FieldDoesNotExist
 
 
+class ModelAdmin(admin.ModelAdmin):
+    ordering = ['pk']
+
+
 # https://github.com/daniyalzade/django_reverse_admin
+
+
 class ReverseInlineFormSet(BaseModelFormSet):
     '''
     A formset with either a single object or a single empty
@@ -29,15 +37,15 @@ class ReverseInlineFormSet(BaseModelFormSet):
                  prefix=None,
                  queryset=None,
                  save_as_new=False):
-        object = getattr(instance, self.parent_fk_name, None)
-        if object:
-            qs = self.model.objects.filter(pk=object.pk)
+        object_ = getattr(instance, self.parent_fk_name, None)
+        if object_:
+            qs = self.model.objects.filter(pk=object_.pk)
         else:
             qs = self.model.objects.none()
             self.extra = 1
-        super(ReverseInlineFormSet, self).__init__(data, files,
-                                                   prefix=prefix,
-                                                   queryset=qs)
+        super().__init__(data, files,
+                         prefix=prefix,
+                         queryset=qs)
         for form in self.forms:
             form.empty_permitted = False
 
@@ -100,7 +108,7 @@ class ReverseInlineModelAdmin(InlineModelAdmin):
                  parent_fk_name,
                  model, admin_site,
                  inline_type):
-        self.template = 'admin/edit_inline/%s.html' % inline_type
+        self.template = f'admin/edit_inline/{inline_type}.html'
         self.parent_fk_name = parent_fk_name
         self.model = model
         field_descriptor = getattr(parent_model, self.parent_fk_name)
@@ -144,16 +152,21 @@ class ReverseInlineModelAdmin(InlineModelAdmin):
                                              **kwargs)
 
 
-class ReverseModelAdmin(ModelAdmin):
+class ReverseModelAdmin(admin.ModelAdmin):
     '''
     Patched ModelAdmin class. The add_view method is overridden to
     allow the reverse inline formsets to be saved before the parent
     model.
     '''
+    inline_reverse = []
+    inline_type = ""
 
     def __init__(self, model, admin_site):
+        if not self.inline_reverse or not self.inline_type:
+            raise ValueError(
+                f'At least one inline_reverse and inline_type must be specified for {self.__class__.__name__}')
 
-        super(ReverseModelAdmin, self).__init__(model, admin_site)
+        super().__init__(model, admin_site)
         if self.exclude is None:
             self.exclude = []
         self.exclude = list(self.exclude)
@@ -175,7 +188,7 @@ class ReverseModelAdmin(ModelAdmin):
             if isinstance(field, (OneToOneField, ForeignKey)):
                 if admin_class:
                     admin_class_to_use = type(
-                        str('DynamicReverseInlineModelAdmin_{}'.format(admin_class.__name__)),
+                        f'DynamicReverseInlineModelAdmin_{admin_class.__name__}',
                         (admin_class, ReverseInlineModelAdmin),
                         {},
                     )
@@ -253,7 +266,7 @@ class ReverseModelAdmin(ModelAdmin):
                 new_object = self.save_form(request, form, change=not add)
             else:
                 new_object = form.instance
-            formsets, inline_instances = self._create_formsets(request, new_object, change=not add)
+            formsets, _ = self._create_formsets(request, new_object, change=not add)
             formset_inline_tuples = zip(formsets, self.get_inline_instances(request))
             formset_inline_tuples = _remove_blank_reverse_inlines(new_object, formset_inline_tuples)
             formsets = [t[0] for t in formset_inline_tuples]
@@ -297,12 +310,12 @@ class ReverseModelAdmin(ModelAdmin):
                     prefix = FormSet.get_default_prefix()
                     prefixes[prefix] = prefixes.get(prefix, 0) + 1
                     if prefixes[prefix] != 1:
-                        prefix = "%s-%s" % (prefix, prefixes[prefix])
+                        prefix = "{prefix}-{prefixes[prefix]}"
                     formset = FormSet(instance=self.model(), prefix=prefix)
                     formsets.append(formset)
             else:
                 form = model_form(instance=obj)
-                formsets, inline_instances = self._create_formsets(request, obj, change=True)
+                formsets, _ = self._create_formsets(request, obj, change=True)
 
         if not add and not self.has_change_permission(request, obj):
             readonly_fields = flatten_fieldsets(
@@ -325,7 +338,7 @@ class ReverseModelAdmin(ModelAdmin):
         # Inherit the default context from admin_site
         context = self.admin_site.each_context(request)
         reverse_admin_context = {
-            'title': _(('Change %s', 'Add %s')[add]) % force_str(opts.verbose_name),
+            'title': ('Change %s', 'Add %s')[add] % force_str(opts.verbose_name),
             'adminform': adminForm,
             # 'is_popup': '_popup' in request.REQUEST,
             'is_popup': False,
