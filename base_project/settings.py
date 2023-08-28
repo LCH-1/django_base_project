@@ -246,7 +246,7 @@ LOGGING = {
     'loggers': {
         # default disable
         'django': {
-            'handlers': ['no_output_console']
+            # 'handlers': ['no_output_console']
         },
 
         'django.server': {
