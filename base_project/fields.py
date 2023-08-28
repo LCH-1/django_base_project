@@ -7,7 +7,7 @@ class FileField(BaseFileField):
     def to_representation(self, value):
         try:
             url = value.url
-        except AttributeError:
+        except (AttributeError, ValueError):
             return None
 
         if url.startswith("/api/fileserver/protected/"):
