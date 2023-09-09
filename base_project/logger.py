@@ -2,6 +2,7 @@ import logging
 import logging.handlers
 import django
 import rest_framework
+import asgiref
 
 from django.conf import settings
 
@@ -17,7 +18,7 @@ DEFAULT_SETTING = {
     "show_path": False,
     "rich_tracebacks": True,
     "tracebacks_extra_lines": 5,
-    "tracebacks_suppress": [django, rest_framework],
+    "tracebacks_suppress": [django, rest_framework, asgiref],
 }
 LOGFILE = settings.LOGFILE
 
