@@ -5,6 +5,7 @@
     <div id="toolbar">
         {% block object-tools %}
             {% block object-tools-items %}
+            {% comment %}
                 {% if has_add_permission %}
                   <ul class="object-tools">
                       <li>
@@ -15,8 +16,9 @@
                       </li>
                   </ul>
                 {% endif %}
+                {% endcomment %}
             {% endblock %}
-        {% endblock %}
+            {% endblock %}
         <form id="changelist-search" method="get" class="form-inline">
             <div><!-- DIV needed for valid HTML -->
                 <label for="searchbar"><img src="{% static "admin/img/search.svg" %}" alt="Search"/></label>
