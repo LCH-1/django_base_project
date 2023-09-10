@@ -1,4 +1,4 @@
-from django.db import models
+from django.db.models import FileField as BaseFileField
 
 from rest_framework import serializers
 from rest_framework.serializers import BaseSerializer, Serializer
@@ -8,13 +8,14 @@ from rest_framework.fields import (
     IntegerField, SerializerMethodField, TimeField, IPAddressField
 )
 
+from base_project import models
 from base_project.fields import FileField
 from base_project.utils import ul
 
 
 class ModelSerializer(serializers.ModelSerializer):
     serializer_field_mapping = serializers.ModelSerializer.serializer_field_mapping
-    serializer_field_mapping[models.FileField] = FileField
+    serializer_field_mapping[BaseFileField] = FileField
 
     def set_default_error_messages(self, extra_kwargs):
         meta = getattr(self, 'Meta')
