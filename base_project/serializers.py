@@ -1,6 +1,7 @@
 from django.db import models
 
 from rest_framework import serializers
+from rest_framework.serializers import BaseSerializer, Serializer
 from rest_framework.exceptions import ErrorDetail, ValidationError
 from rest_framework.fields import (
     BooleanField, CharField, ChoiceField, DateField, DateTimeField, EmailField,
@@ -77,6 +78,24 @@ class WritableSerializerMethodField(serializers.SerializerMethodField):
         self.read_only = False
 
     def to_internal_value(self, data):
+        model = self.parent.Meta.model
+        field = getattr(model, self.field_name).field
+
+        if isinstance(field, (models.ForeignKey, models.OneToOneField)):
+            fk_model = field.remote_field.model
+            try:
+                data = fk_model.objects.get(pk=data)
+            except fk_model.DoesNotExist as e:
+                raise ValidationError(f"올바르지 않은 {field.verbose_name} 입니다.") from e
+
+        elif isinstance(field, (models.ManyToManyField)):
+            fk_model = field.remote_field.model
+            queryset = fk_model.objects.filter(pk__in=data)
+            if len(data) != queryset.count():
+                raise ValidationError(f"올바르지 않은 {field.verbose_name} 입니다.")
+
+            data = queryset
+
         return {self.field_name: data}
 
 
