@@ -71,6 +71,43 @@ class ModelSerializer(serializers.ModelSerializer):
 
         return self.fields
 
+    # TODO : nested model create 시 테스트 필요
+    def is_valid(self, *, raise_exception=False):
+        assert hasattr(self, 'initial_data'), (
+            'Cannot call `.is_valid()` as no `data=` keyword argument was '
+            'passed when instantiating the serializer instance.'
+        )
+
+        if not hasattr(self, '_validated_data'):
+            try:
+                self._validated_data = self.run_validation(self.initial_data)
+            except ValidationError as exc:
+                self._validated_data = {}
+                self._errors = exc.detail
+            else:
+                self._errors = {}
+
+        if self._errors:
+            first_error = next(iter(self._errors.items()))[1]
+            first_error = first_error[0]
+
+            self._errors = {
+                "error": first_error
+                # "error": first_error[0] if isinstance(first_error, list) else first_error
+            }
+
+            # self._errors = {key: [ErrorDetail(message) for message in value] for key, value in self._errors.items()[0]}
+
+            if raise_exception:
+                raise ValidationError(self.errors)
+
+        return not bool(self._errors)
+
+
+class ListSerializer(serializers.ListSerializer):
+    def update(self, instance, validated_data):
+        pass
+
 
 class WritableSerializerMethodField(serializers.SerializerMethodField):
     def __init__(self, method_name=None, **kwargs):

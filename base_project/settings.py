@@ -85,7 +85,7 @@ MIDDLEWARE = [
 if DEBUG:
     MIDDLEWARE.append(f'{PROJECT_NAME}.middleware.RequestLogMiddleware')
 
-MIDDLEWARE.append(f'{PROJECT_NAME}.middleware.ResponseFormattingMiddleware')
+# MIDDLEWARE.append(f'{PROJECT_NAME}.middleware.ResponseFormattingMiddleware')
 
 ROOT_URLCONF = f'{PROJECT_NAME}.urls'
 
