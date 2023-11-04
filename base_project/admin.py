@@ -1,7 +1,9 @@
 from functools import partial
 
 from django.contrib import admin
-from django.contrib.admin import helpers, TabularInline, StackedInline, site
+from django.contrib.admin import (
+    helpers, TabularInline, StackedInline, ModelAdmin, display,
+)
 from django.contrib.admin.options import InlineModelAdmin
 from django.contrib.admin.utils import (flatten_fieldsets, unquote)
 from django.db import models
@@ -11,7 +13,6 @@ from django.forms.formsets import all_valid
 from django.forms.models import BaseModelFormSet, modelformset_factory
 from django.utils.encoding import force_str
 from django.utils.safestring import mark_safe
-# from django.utils.translation import gettext as _
 from django.core.exceptions import PermissionDenied, FieldDoesNotExist
 
 
@@ -19,9 +20,38 @@ class ModelAdmin(admin.ModelAdmin):
     ordering = ['pk']
 
 
+class AdminSite(admin.AdminSite):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._registry_order = []
+
+    def register(self, model_or_iterable, admin_class=None, **options):
+        super().register(model_or_iterable, admin_class, **options)
+        if isinstance(model_or_iterable, (list, tuple)):
+            for model in model_or_iterable:
+                self._registry_order.append(model)
+        else:
+            self._registry_order.append(model_or_iterable)
+
+    def get_app_list(self, request):
+        app_dict = self._build_app_dict(request)
+        # # app_list를 원하는 순서로 재구성
+        # app_list = sorted(
+        #     app_dict.values(),
+        #     key=lambda x: x['name'].lower()
+        # )
+        app_list = app_dict.values()
+
+        for app in app_list:
+            app['models'].sort(key=lambda x: self._registry_order.index(x['model']))
+
+        return app_list
+
+
+site = AdminSite()
+
+
 # https://github.com/daniyalzade/django_reverse_admin
-
-
 class ReverseInlineFormSet(BaseModelFormSet):
     '''
     A formset with either a single object or a single empty
