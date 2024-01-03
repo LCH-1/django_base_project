@@ -166,6 +166,12 @@ class ListSerializer(serializers.ListSerializer):
         pass
 
 
+class RawListSerializer(ListSerializer):
+    @property
+    def data(self):
+        return super(serializers.ListSerializer, self).data
+
+
 class WritableSerializerMethodField(serializers.SerializerMethodField):
     def __init__(self, method_name=None, **kwargs):
         super().__init__(method_name, **kwargs)
