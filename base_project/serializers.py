@@ -13,9 +13,61 @@ from base_project.fields import FileField
 from base_project.utils import ul
 
 
-class ModelSerializer(serializers.ModelSerializer):
+class ResponseErrorSerializerMixin:
+    # 1번, TODO : nested model create 시 테스트 필요
+    def is_valid(self, *, raise_exception=False):
+        assert hasattr(self, 'initial_data'), (
+            'Cannot call `.is_valid()` as no `data=` keyword argument was '
+            'passed when instantiating the serializer instance.'
+        )
+
+        if not hasattr(self, '_validated_data'):
+            try:
+                self._validated_data = self.run_validation(self.initial_data)
+            except ValidationError as exc:
+                self._validated_data = {}
+                self._errors = exc.detail
+            else:
+                self._errors = {}
+
+        if not self._errors:
+            return True
+
+        if not (errors := self._errors):
+            return True
+
+        errors = self._errors
+        origin = errors
+
+        while not isinstance(errors, str):
+            if not errors:
+                break
+
+            if isinstance(errors, list):
+                errors = [x for x in errors if x][0]
+                continue
+
+            for v in errors.values():
+                errors = v
+                break
+
+        self._errors = {
+            "error": errors,
+            "origin_error": origin,
+            # "error": first_error[0] if isinstance(first_error, list) else first_error
+        }
+
+        # self._errors = {key: [ErrorDetail(message) for message in value] for key, value in self._errors.items()[0]}
+
+        if raise_exception:
+            raise ValidationError(self.errors)
+
+        return False
+
+
+class ModelSerializer(ResponseErrorSerializerMixin, serializers.ModelSerializer):
     serializer_field_mapping = serializers.ModelSerializer.serializer_field_mapping
-    serializer_field_mapping[BaseFileField] = FileField
+    serializer_field_mapping[models.FileField] = FileField
 
     def set_default_error_messages(self, extra_kwargs):
         meta = getattr(self, 'Meta')
@@ -41,9 +93,13 @@ class ModelSerializer(serializers.ModelSerializer):
                 # message = 'enter'
 
             default_error_messages = {
+                'does_not_exist': f'존재하지 않는 {verbose_name}입니다.',
+                'unique': f'이미 존재하는 {verbose_name}입니다.',
+                'null': f'{ul(verbose_name)} {message}해주세요.',
                 'blank': f'{ul(verbose_name)} {message}해주세요.',
                 'required': f'{ul(verbose_name)} {message}해주세요.',
                 'invalid': f'알맞은 형식의 {ul(verbose_name)} {message}해주세요.',
+                'incorrect_type': f'알맞은 형식의 {ul(verbose_name)} {message}해주세요.',
             }
 
             # default_error_messages = {
