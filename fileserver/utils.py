@@ -10,6 +10,7 @@ from pathlib import Path as PathOrigin
 from pathlib import PurePath as PurePathOrigin
 from django.http import Http404, HttpResponse, FileResponse
 
+# from django.views.static import serve
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
@@ -20,7 +21,7 @@ class PurePath(type(PurePathOrigin())):
 
 
 class Path(type(PathOrigin())):
-    # for 'Path' has no '_flavour' member error
+    # for 'PurePath' has no '_flavour' member error
     _flavour = _PosixFlavour() if os.name == 'posix' else _WindowsFlavour()
 
 
@@ -48,7 +49,7 @@ async def dev(request, filename, **kwargs):
             offset=0,
             length=size
         ),
-        status=206,
+        # status=206,
     )
     response['Content-length'] = size
 
@@ -135,8 +136,8 @@ async def sendfile(request, filename, attachment=False, attachment_filename=None
     filepath_obj = _sanitize_path(filename, root_path)
     _sendfile = _get_sendfile()
 
-    if not filepath_obj.exists():
-        raise Http404(f'"{filepath_obj}" does not exist')
+    if not filepath_obj.exists() or not filepath_obj.is_file():
+        raise Http404(f'"{filename}" does not exist')
 
     content_type, guessed_encoding = mimetypes.guess_type(str(filepath_obj))
 
@@ -169,6 +170,7 @@ async def sendfile(request, filename, attachment=False, attachment_filename=None
 
     # response['Content-length'] = filepath_obj.stat().st_size
     response['Connection'] = "Keep-Alive"
+    # response['Connection'] = "Keep-Alive"
 
     if not encoding:
         encoding = guessed_encoding
