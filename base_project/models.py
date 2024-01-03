@@ -1,8 +1,10 @@
 import uuid
 
-from django.db import models
-from django.db.models import SET_NULL, CASCADE
+from django.db import models, IntegrityError
+from django.db.models import SET_NULL, CASCADE, UniqueConstraint, Manager
+from django.db.models.fields.files import FieldFile as BaseFieldFile
 from django.core import checks, validators
+from django.core.exceptions import ObjectDoesNotExist as DoesNotExist
 
 
 class Model(models.Model):
@@ -14,7 +16,39 @@ class Model(models.Model):
         ordering = ['-pk']
 
 
+class SingletonManager(models.Manager):
+    def get(self, *args, **kwargs):
+        try:
+            return super().get()
+        except DoesNotExist:
+            return None
+
+
+class SingletonModel(Model):
+    objects = SingletonManager()
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        # 저장한 데이터를 덮어씌우는 경우
+        self.pk = 1
+
+        # 에러를 발생시키는 경우
+        # if not self.pk and self.__class__.objects.exists():
+        # raise IntegrityError("SiteSettings 모델에 이미 데이터가 존재합니다.")
+
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        IntegrityError('SingletonModel cannot be deleted.')
+
+
 class CheckVerboseNameAttributeMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.verbose_name = self.verbose_name.replace("_", " ").strip()
+
     def _check_verbose_name_attribute(self, **kwargs):
         if not self._verbose_name:
             return [
@@ -62,15 +96,34 @@ class ForeignKey(CheckVerboseNameAttributeMixin, CheckRelatedNameAttributeMixin,
 
 
 class ManyToManyField(CheckVerboseNameAttributeMixin, CheckRelatedNameAttributeMixin, models.ManyToManyField):
-    pass
+    count = int  # resolve pylint-django's no member error
+    all = list  # resolve pylint-django's no member error
 
 
 class OneToOneField(CheckVerboseNameAttributeMixin, models.OneToOneField):
     pass
 
 
+class FieldFile(BaseFieldFile):
+    def _get_path(self, base_path):
+        if not self.field.protected:
+            return base_path
+
+        return f"{'/'.join(base_path.split('/')[:-1])}/{self.instance.pk}"
+
+    @property
+    def url(self):
+        return self._get_path(super().url)
+
+    # def __str__(self):
+    #     return self._get_path(self.name)
+
+
 class FileField(CheckVerboseNameAttributeMixin, models.FileField):
+    attr_class = FieldFile
+
     def __init__(self, *args, **kwargs):
+        self.obfuscated = kwargs.pop('obfuscated', True)
         self.protected = kwargs.pop('protected', False)
         self._upload_to = kwargs.pop('upload_to', None)
 
@@ -81,8 +134,13 @@ class FileField(CheckVerboseNameAttributeMixin, models.FileField):
         model_name = instance._meta.model_name
         field_name = self.name
 
-        ext = filename.split('.')[-1]
-        filename = f'{uuid.uuid4().hex}.{ext}'
+        if self.obfuscated:
+            if "." in filename:
+                ext = filename.split('.')[-1]
+                filename = f'{uuid.uuid4().hex}.{ext}'
+            else:
+                filename = f'{uuid.uuid4().hex}'
+
         fullpath = f"{model_name}/{field_name}/{filename}"
 
         return f"protected/{fullpath}" if self.protected else fullpath
@@ -99,6 +157,7 @@ class FileField(CheckVerboseNameAttributeMixin, models.FileField):
         assert isinstance(self.protected, bool), \
             f"{model.__name__}.{self.name} / FileField.protected must be bool, not {type(self.protected)}"
 
+        # TODO check permission is async
         has_permission_method = hasattr(model, f"has_{self.name}_permission")
 
         assert (self.protected, has_permission_method) != (True, False), \
@@ -121,6 +180,10 @@ class DateField(CheckVerboseNameAttributeMixin, models.DateField):
 
 
 class DateTimeField(CheckVerboseNameAttributeMixin, models.DateTimeField):
+    strftime = str  # resolve pylint-django's no member error
+
+
+class TimeField(CheckVerboseNameAttributeMixin, models.TimeField):
     pass
 
 
@@ -144,7 +207,7 @@ class PositiveIntegerField(CheckVerboseNameAttributeMixin, models.PositiveIntege
     pass
 
 
-class TimeField(CheckVerboseNameAttributeMixin, models.TimeField):
+class FloatField(CheckVerboseNameAttributeMixin, models.FloatField):
     pass
 
 
