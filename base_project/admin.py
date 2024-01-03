@@ -1,23 +1,144 @@
 from functools import partial
+from typing import Any
 
 from django.contrib import admin
-from django.contrib.admin import (
-    helpers, TabularInline, StackedInline, ModelAdmin, display,
-)
+from django.contrib.admin import helpers, StackedInline, display
 from django.contrib.admin.options import InlineModelAdmin
-from django.contrib.admin.utils import (flatten_fieldsets, unquote)
+from django.contrib.admin.sites import AdminSite
+from django.contrib.admin.utils import flatten_fieldsets, unquote
+from django.contrib.admin.options import get_content_type_for_model
 from django.db import models
 from django.db.models import OneToOneField, ForeignKey
 from django.forms import ModelForm
 from django.forms.formsets import all_valid
 from django.forms.models import BaseModelFormSet, modelformset_factory
+from django.urls import reverse
+from django.utils.html import format_html
 from django.utils.encoding import force_str
 from django.utils.safestring import mark_safe
 from django.core.exceptions import PermissionDenied, FieldDoesNotExist
 
 
-class ModelAdmin(admin.ModelAdmin):
-    ordering = ['pk']
+class ReadonlyMixin:
+    set_all_fields_readonly = True
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+class ReadonlyInlineMixin(ReadonlyMixin):
+    can_delete = False
+
+    def __init__(self, *args, **kwargs):
+        self._readonly_fields = []
+        self.template = f'custom/tabular.html'
+
+        super().__init__(*args, **kwargs)
+
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        self._readonly_fields = fields
+
+        return fields
+
+    def get_readonly_fields(self, request, obj=None):
+        # readonly_fields = super().get_readonly_fields(request, obj)
+        # return set(readonly_fields) | set(self._readonly_fields)
+
+        return self._readonly_fields
+
+
+class AdminMixin:
+    disable_auto_readonly_fields = False
+    disable_ordering_fields = False
+    disable_setup_fields = False
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._fields = []
+
+    def _get_related_link(self, obj, str_field=None, verbose=None):
+        app_label = obj._meta.app_label
+        model_name = obj._meta.model_name
+        verbose = verbose or (getattr(obj, str_field, "-") if str_field else str(obj))
+
+        link = reverse(f"admin:{app_label}_{model_name}_change", args=[obj.pk,])
+        return format_html(f'<a href="{link}">{verbose}</a>')
+
+    def get_inlines(self, request, obj):
+        if not obj:
+            inlines = super().get_inlines(request, obj)
+            return [x for x in inlines if not issubclass(x, ReadonlyInlineMixin)]
+
+        return super().get_inlines(request, obj)
+
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+
+        if not self.fields and not self.disable_ordering_fields:
+            model_fields = self.model._meta.fields
+            orderd_fields = [name for x in model_fields if (name := x.name) in fields]
+            remain_fields = [x for x in fields if x not in orderd_fields]
+            fields = orderd_fields + remain_fields
+
+        return fields
+
+    def add_view(self, request, form_url="", extra_context=None):
+        fields = self.get_fields(request)
+
+        if not self.disable_setup_fields:
+            model = self.model
+            model_pk_name = model._meta.pk.name
+            model_fields = model._meta.fields
+            model_field_names = [name for x in model_fields if (name := x.name) not in ["pk", model_pk_name]]
+            self.fields = [x for x in fields if x in model_field_names]
+
+        return self.changeform_view(request, None, form_url, extra_context)
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        obj = self.get_object(request, unquote(object_id))
+        self._fields = flatten_fieldsets(self.get_fieldsets(request, obj))
+        return self.changeform_view(request, object_id, form_url, extra_context)
+
+    def get_readonly_fields(self, request, obj=None):
+        if not obj:
+            return super().get_readonly_fields(request, obj)
+
+        readonly_fields = list(super().get_readonly_fields(request, obj))
+        if not self.disable_auto_readonly_fields:
+            model_fields = self.model._meta.fields
+            model_field_names = [field.name for field in model_fields]
+
+            auto_readonly_fields = [obj._meta.pk.name]
+            auto_readonly_fields += [field.name for field in model_fields if not getattr(field, 'editable', True)]
+            auto_readonly_fields += [field for field in self._fields
+                                     if field not in model_field_names + auto_readonly_fields]
+
+            readonly_fields += auto_readonly_fields
+
+        return readonly_fields
+
+
+class ModelAdmin(AdminMixin, admin.ModelAdmin):
+    pass
+
+
+class TabularInline(AdminMixin, admin.TabularInline):
+    pass
+
+
+class SingletonModelAdmin(ModelAdmin):
+    def has_add_permission(self, request):
+        if self.model.objects.exists():
+            return False
+
+        return super().has_add_permission(request)
 
 
 class AdminSite(admin.AdminSite):
@@ -25,7 +146,7 @@ class AdminSite(admin.AdminSite):
         super().__init__(*args, **kwargs)
         self._registry_order = []
 
-    def register(self, model_or_iterable, admin_class=None, **options):
+    def register(self, model_or_iterable, admin_class=ModelAdmin, **options):
         super().register(model_or_iterable, admin_class, **options)
         if isinstance(model_or_iterable, (list, tuple)):
             for model in model_or_iterable:
