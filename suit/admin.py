@@ -42,7 +42,7 @@ def get_related_field(name, short_description=None, admin_order_field=None, admi
                 continue
             obj = getattr(obj, related_name)
         if obj and as_link:
-            obj = mark_safe(u'<a href="%s" class="link-with-icon">%s<i class="fa fa-caret-right"></i></a>' % \
+            obj = mark_safe(u'<a href="%s" class="link-with-icon">%s<i class="fa fa-caret-right"></i></a>' %
                             (get_admin_url(obj, admin_prefix, current_app=self.admin_site.name), obj))
         return obj
 

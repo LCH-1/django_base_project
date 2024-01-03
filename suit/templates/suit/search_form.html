@@ -46,4 +46,13 @@
             </div>
         </form>
     </div>
+    <script>
+      window.onload = function() {
+        var input = document.getElementById('searchbar');
+        var val = input.value;
+        input.focus();
+        input.value = '';
+        input.value = val;
+      };
+    </script>
 {% endif %}
