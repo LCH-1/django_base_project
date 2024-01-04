@@ -1,8 +1,10 @@
+import re
+
 from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from django.urls import path, include
+from django.urls import path, include, re_path
 
 from drf_spectacular.views import SpectacularSwaggerView, SpectacularRedocView, SpectacularAPIView
 
@@ -15,11 +17,11 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    urlpatterns += staticfiles_urlpatterns()
     urlpatterns += [
-        path('scheme/', SpectacularAPIView.as_view(), name='schema'),
-        path('swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-        path('redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+        re_path(r"^%s(?P<path>.*)$" % re.escape(settings.STATIC_URL.lstrip("/")), views.static_serve),
+        path('api/scheme/', SpectacularAPIView.as_view(), name='schema'),
+        path('api/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+        path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     ]
 
 else:
