@@ -1,9 +1,11 @@
 import re
 import os
 import uuid
+import json
 from datetime import datetime
 
 from django.utils.deconstruct import deconstructible
+from django.core.cache import cache
 
 
 @deconstructible
@@ -71,3 +73,29 @@ def get_prefetch_related_fields(model):
     manytomany_choices = [x.name for x in meta.many_to_many]
 
     return reverse_choices + manytomany_choices
+
+
+def get_cached_list(view_info):
+    cached_list_key = f"cached_{view_info}_list"
+    cached_list = cache.get(cached_list_key, "[]")
+    return cached_list_key, json.loads(cached_list)
+
+
+def clear_cached_view(view_info):
+    cached_list_key, cached_list = get_cached_list(view_info)
+
+    cache.delete_many(cached_list)
+    cache.delete(cached_list_key)
+
+
+def clear_all_cache():
+    cache.clear()
+
+
+def get_client_ip(request):
+    if x_forwarded_for := request.META.get('HTTP_X_FORWARDED_FOR'):
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+
+    return ip
