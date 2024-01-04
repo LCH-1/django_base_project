@@ -2,12 +2,12 @@ import re
 
 from django.conf.urls.static import static
 from django.conf import settings
-from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import path, include, re_path
 
 from drf_spectacular.views import SpectacularSwaggerView, SpectacularRedocView, SpectacularAPIView
 
+from base_project import admin
 from base_project import views
 
 urlpatterns = [

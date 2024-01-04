@@ -43,6 +43,3 @@ class UserAdmin(BaseUserAdmin):
 
 
 admin.site.register(User, UserAdmin)
-
-# unregister default group
-admin.site.unregister(Group)
