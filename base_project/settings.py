@@ -1,7 +1,11 @@
-import os
 import sys
+import os
+from os import environ as env
+
 from pathlib import Path
 from django.db.models import Field
+
+from base_project.logger import logger
 
 IS_RUNSERVER = 'runserver' in sys.argv or sys.argv[0].rsplit("\\", maxsplit=1)[-1] == 'uvicorn'
 
@@ -9,14 +13,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = os.path.realpath(os.path.dirname(__file__))
 PROJECT_NAME = os.path.basename(PROJECT_ROOT)
 
+SECRET_KEY = env.get('SECRET_KEY', ' ')
+DEBUG = env.get('DEBUG', '1') == '1'
+IS_LOCAL = env.get("IS_LOCAL", "1") == '1'  # local에서 test할 때 사용, 배포 환경에서는 False로 설정
+
 # db unique intergrity validation 메세지 변경
 Field.default_error_messages.update({
     "unique": "이미 존재하는 %(field_label)s입니다.",
 })
 
-SECRET_KEY = os.environ.get('SECRET_KEY', ' ')
 
-DEBUG = os.environ.get('DEBUG', '1') == '1'
+ALLOWED_HOSTS = [
+    "backend", "backend:8000",
+    "localhost", "localhost:3000",
+    "127.0.0.1", "127.0.0.1:3000",
+]
 
 if DEBUG:
     ALLOWED_HOSTS = ['*']
@@ -25,6 +36,9 @@ if DEBUG:
 else:
     ALLOWED_HOSTS = ['']
     CSRF_TRUSTED_ORIGINS = []
+
+CSRF_TRUSTED_ORIGINS = [f"http://{x}" for x in ALLOWED_HOSTS]
+CSRF_TRUSTED_ORIGINS += [f"https://{x}" for x in ALLOWED_HOSTS]
 
 CORS_ORIGIN_WHITELIST = CSRF_TRUSTED_ORIGINS
 
@@ -82,10 +96,8 @@ MIDDLEWARE = [
     f'{PROJECT_NAME}.middleware.LoggedInUserMiddleware',  # logger formatter에서 request를 받아오기 위해 사용
 ]
 
-if DEBUG:
+if DEBUG or not IS_LOCAL:
     MIDDLEWARE.append(f'{PROJECT_NAME}.middleware.RequestLogMiddleware')
-
-# MIDDLEWARE.append(f'{PROJECT_NAME}.middleware.ResponseFormattingMiddleware')
 
 ROOT_URLCONF = f'{PROJECT_NAME}.urls'
 
@@ -93,7 +105,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [],
-        'APP_DIRS': True,
+        # 'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -175,10 +187,18 @@ STATIC_ROOT = BASE_DIR / 'static'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = env.get("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = env.get("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 LOGIN_URL = '/admin/login/'
 
-LOGFILE = 'general.log'
+""" loggging setting start """
+LOGFILE = 'log/general.log'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -192,9 +212,11 @@ LOGGING = {
     },
     'formatters': {
         'debug_console': {
-            '()': f'{PROJECT_NAME}.logger.DefaultFormatter',
-            'format': '[{filepath}:{lineno}] | {userinfo} >> {message}',
+            '()': f'{PROJECT_NAME}.logger.ConsoleFormatter',
+            'format':  ('[{levelname_summary}]: {message}' if IS_LOCAL else
+                        '[{asctime}.{msecs:03.0f}] | {levelname:7} | [{filepath}:{lineno}|{funcName}()] | >> {message}'),
             'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
         },
         'console': {
             '()': f'{PROJECT_NAME}.logger.DefaultFormatter',
@@ -210,7 +232,7 @@ LOGGING = {
         },
         'file': {
             '()': f'{PROJECT_NAME}.logger.DefaultFormatter',
-            'format': '[{asctime}] | {levelname:7} | [{filepath}:{funcName}:{lineno}] | {userinfo} | >> {message}',
+            'format': '[{asctime}] | {levelname:7} | [{filepath}:{lineno}|{funcName}()] | {userinfo} | >> {message}',
             'style': '{',
         },
     },
@@ -226,7 +248,7 @@ LOGGING = {
             'formatter': 'console',
         },
         'debug_console': {
-            'class': f'{PROJECT_NAME}.logger.DefaultLogHandler',
+            'class': f'{PROJECT_NAME}.logger.ConsoleLogHandler',
             'formatter': 'debug_console',
             'level': 'DEBUG',
         },
@@ -242,7 +264,7 @@ LOGGING = {
         },
         'file': {
             # django를 runserver로 실행시켰을 때는 LogFileHandler 사용
-            'class': f'{PROJECT_NAME}.logger.{"LogFileHandler" if IS_RUNSERVER else "TimedRotatingFileHandler"}',
+            'class': f'{PROJECT_NAME}.logger.{"LogFileHandler" if IS_LOCAL else "TimedRotatingFileHandler"}',
             'formatter': 'file',
             'level': 'DEBUG',
         },
@@ -250,7 +272,7 @@ LOGGING = {
     'loggers': {
         # default disable
         'django': {
-            # 'handlers': ['no_output_console']
+            'handlers': ['no_output_console']
         },
 
         'django.server': {
@@ -263,15 +285,13 @@ LOGGING = {
 
         # logger.debug() log
         'console_debug': {
-            'level': 'DEBUG',
-            "filters": ["require_debug_true"],
+            'level': 'DEBUG' if DEBUG else 'INFO',
             'handlers': ['debug_console', 'file'],
         },
 
         # middleware request log
         'request_log': {
             'level': 'DEBUG',
-            "filters": ["require_debug_true"],
             'handlers': ['request_log', 'file'],
         },
 
@@ -281,4 +301,66 @@ LOGGING = {
         #     'level': 'DEBUG',
         # },
     },
+}
+""" loggging setting end """
+
+if REDIS_HOST := env.get('REDIS_HOST', ''):
+    if REDIS_USERNAME := env.get('REDIS_USERNAME', ''):
+        host = f"redis://{REDIS_USERNAME}:{env.get('REDIS_PASSWORD')}@{REDIS_HOST}:6379"
+    else:
+        host = f"redis://{REDIS_HOST}:6379"
+
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": host,
+        }
+    }
+
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        }
+    }
+
+USE_L10N = False
+
+DATE_FORMAT = 'Y/m/d'
+TIME_FORMAT = 'H:i:s'
+DATETIME_FORMAT = f'{DATE_FORMAT} {TIME_FORMAT}'
+SHORT_DATE_FORMAT = 'm/d'
+SHORT_DATETIME_FORMAT = 'm/d P'
+
+APSCHEDULER_DATETIME_FORMAT = 'Y/m/d H:i:s'
+
+CKEDITOR_CONFIGS = {
+    "default": {
+        "skin": "moono-lisa",
+        "toolbar_Basic": [["Source", "-", "Bold", "Italic"]],
+        "toolbar_Full": [
+            [
+                "Styles",
+                "Format",
+                "Bold",
+                "Italic",
+                "Underline",
+                "Strike",
+                "SpellChecker",
+                "Undo",
+                "Redo",
+            ],
+            ["Link", "Unlink", "Anchor"],
+            ["Image", "Flash", "Table", "HorizontalRule"],
+            ["TextColor", "BGColor"],
+            ["Smiley", "SpecialChar"],
+            ['JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
+            ["Source"],
+        ],
+        "toolbar": "Full",
+        "height": 291,
+        "width": "100%",
+        "filebrowserWindowWidth": 940,
+        "filebrowserWindowHeight": 725,
+    }
 }
