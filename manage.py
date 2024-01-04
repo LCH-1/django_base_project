@@ -2,6 +2,7 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+from base_project import startup
 
 
 def main():
@@ -20,7 +21,9 @@ def main():
         import subprocess
         from django.conf import settings
 
+        startup.run()
         subprocess.run(['uvicorn', f'{settings.PROJECT_NAME}.asgi:application', '--reload', '--host', '0.0.0.0'], check=False)
+        return
 
     execute_from_command_line(sys.argv)
 
