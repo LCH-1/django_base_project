@@ -7,8 +7,7 @@ from django.contrib.auth import get_user
 
 from rest_framework.status import is_client_error, is_server_error
 
-from .logger import request_logger as logger
-
+from base_project.logger import request_logger
 
 MEDIA_URL = settings.MEDIA_URL
 local = threading.local()
@@ -27,25 +26,26 @@ class RequestLogMiddleware:
         log_data = {
             "remote_address": request.META["REMOTE_ADDR"],
             "request_method": request.method,
-            "content_type": request.content_type,
             "request_path": request.get_full_path(),
-            "user_info": str(request.user),
+            "content_type": request.content_type,
         }
 
         full_path = str(request.get_full_path())
         is_logging = bool(
-            "/api/" in full_path
-            and MEDIA_URL not in full_path
-            and "insomnia" not in request.headers.get("user_agent", "")
-            and "Postman" not in request.headers.get("user_agent", "")
+            full_path.startswith("/api/") and
+            MEDIA_URL not in full_path and
+            "insomnia" not in (user_agent := request.headers.get("user_agent", "")) and
+            "Postman" not in user_agent and
+            (
+                (refferer := request.META.get('HTTP_REFERER')) and
+                "swagger" not in refferer and
+                "redoc" not in refferer
+            )
         )
 
         if is_logging:
             try:
                 req_body = json.loads(request.body.decode("utf-8")) if request.body else {}
-                for k in req_body:
-                    if "password" in k:
-                        req_body[k] = "#### Password ####"
             except:
                 try:
                     splited_request_body = request.body.split(b"\r")
@@ -63,24 +63,24 @@ class RequestLogMiddleware:
 
             log_data["request_body"] = req_body
 
-            logger.debug(log_data)
+        request_logger.debug(log_data)
 
         # after response
         response = self.get_response(request)
-        if not is_logging or is_server_error(response.status_code):
-            return response
-
-        try:
-            response_body = json.loads(response.content.decode())
-        except:
-            response_body = ""
 
         self.response_log = {
-            "response_body": response_body,
             "status": response.status_code,
-            "runtime": time.time() - self.start_time,
+            "user_info": str(request.user),
         }
-        logger.debug(self.response_log)
+
+        if is_logging and not is_server_error(response.status_code):
+            try:
+                self.response_log["response_body"] = json.loads(response.content.decode())
+            except:
+                self.response_log["response_body"] = ""
+
+        self.response_log["runtime"] = time.time() - self.start_time
+        request_logger.debug(self.response_log, max_length=5)
 
         return response
 
@@ -128,7 +128,6 @@ class ResponseFormattingMiddleware:
                 break
 
             if isinstance(data, list):
-                data = [x for x in data if x]
                 data = data[0]
                 if data == "이 필드는 필수 항목입니다.":
                     data = f"{data_key}는 필수 항목입니다."
