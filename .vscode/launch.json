@@ -12,7 +12,7 @@
             // "program": "manage.py",
             "module": "uvicorn",
             "args": [
-                "acs.asgi:application",
+                "base_project.asgi:application",
                  "--reload",
                  "--host",
                  "0.0.0.0"
