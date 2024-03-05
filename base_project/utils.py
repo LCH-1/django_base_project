@@ -33,22 +33,22 @@ def ends_with_jong(kstr):
 
 def ul(kstr):
     end = "을" if ends_with_jong(kstr) else "를"
-    return f'{kstr}{end}'
+    return end
 
 
 def yi(kstr):
     end = "이" if ends_with_jong(kstr) else "가"
-    return f'{kstr}{end}'
+    return end
 
 
 def wa(kstr):
     end = "과" if ends_with_jong(kstr) else "와"
-    return f'{kstr}{end}'
+    return end
 
 
 def en(kstr):
     end = "은" if ends_with_jong(kstr) else "는"
-    return f'{kstr}{end}'
+    return end
 
 
 def get_select_related_fields(model):
