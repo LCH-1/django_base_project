@@ -1,8 +1,10 @@
-from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
+
+from base_project import viewsets
+from base_project.pagination import get_pagination_class, PageNumberPagination
+
 from user.models import User
 from user.serializers import UserSerializer
-from base_project.pagination import get_pagination_class, PageNumberPagination
 
 
 class UserViewSet(viewsets.ModelViewSet):
