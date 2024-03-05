@@ -1,135 +1,28 @@
 from django.db.models import FileField as BaseFileField
 
 from rest_framework import serializers
-from rest_framework.serializers import BaseSerializer, Serializer
+from rest_framework.serializers import BaseSerializer
 from rest_framework.exceptions import ErrorDetail, ValidationError
-from rest_framework.fields import (
-    BooleanField, CharField, ChoiceField, DateField, DateTimeField, EmailField,
-    IntegerField, SerializerMethodField, TimeField, IPAddressField
-)
+# from rest_framework.fields import (
+#     BooleanField, CharField, ChoiceField, DateField, DateTimeField, EmailField,
+#     IntegerField, SerializerMethodField, TimeField, IPAddressField
+# )
+from rest_framework.fields import SerializerMethodField
 
 from base_project import models
-from base_project.fields import FileField
+from base_project.fields import (
+    FileField, CharField, BooleanField, DateField, DateTimeField,
+    TimeField, DurationField, EmailField, IntegerField, FloatField,
+    PrimaryKeyRelatedField, ChoiceField, URLField,
+)
 from base_project.utils import ul
 
 
 class ResponseErrorSerializerMixin:
-    # 1번, TODO : nested model create 시 테스트 필요
-    def is_valid(self, *, raise_exception=False):
-        assert hasattr(self, 'initial_data'), (
-            'Cannot call `.is_valid()` as no `data=` keyword argument was '
-            'passed when instantiating the serializer instance.'
-        )
+    def is_valid(self, *, raise_exception=False, keep_origin=False):
+        if keep_origin:
+            return super().is_valid(raise_exception=raise_exception)
 
-        if not hasattr(self, '_validated_data'):
-            try:
-                self._validated_data = self.run_validation(self.initial_data)
-            except ValidationError as exc:
-                self._validated_data = {}
-                self._errors = exc.detail
-            else:
-                self._errors = {}
-
-        if not self._errors:
-            return True
-
-        if not (errors := self._errors):
-            return True
-
-        errors = self._errors
-        origin = errors
-
-        while not isinstance(errors, str):
-            if not errors:
-                break
-
-            if isinstance(errors, list):
-                errors = [x for x in errors if x][0]
-                continue
-
-            for v in errors.values():
-                errors = v
-                break
-
-        self._errors = {
-            "error": errors,
-            "origin_error": origin,
-            # "error": first_error[0] if isinstance(first_error, list) else first_error
-        }
-
-        # self._errors = {key: [ErrorDetail(message) for message in value] for key, value in self._errors.items()[0]}
-
-        if raise_exception:
-            raise ValidationError(self.errors)
-
-        return False
-
-
-class ModelSerializer(ResponseErrorSerializerMixin, serializers.ModelSerializer):
-    serializer_field_mapping = serializers.ModelSerializer.serializer_field_mapping
-    serializer_field_mapping[models.FileField] = FileField
-
-    def set_default_error_messages(self, extra_kwargs):
-        meta = getattr(self, 'Meta')
-        model = meta.model
-        fields = self.fields
-
-        for field_name in fields:
-            field_dict = extra_kwargs.get(field_name)
-
-            try:
-                field = getattr(model, field_name).field
-            except AttributeError:
-                continue
-
-            verbose_name = field.verbose_name
-            # TODO settings.LANGUAGE_CODE에 따라 다른 언어로 에러 메세지 출력
-            if isinstance(field, models.FileField):
-                message = '업로드'
-                # message = 'upload'
-
-            else:
-                message = '입력'
-                # message = 'enter'
-
-            default_error_messages = {
-                'does_not_exist': f'존재하지 않는 {verbose_name}입니다.',
-                'unique': f'이미 존재하는 {verbose_name}입니다.',
-                'null': f'{ul(verbose_name)} {message}해주세요.',
-                'blank': f'{ul(verbose_name)} {message}해주세요.',
-                'required': f'{ul(verbose_name)} {message}해주세요.',
-                'invalid': f'알맞은 형식의 {ul(verbose_name)} {message}해주세요.',
-                'incorrect_type': f'알맞은 형식의 {ul(verbose_name)} {message}해주세요.',
-            }
-
-            # default_error_messages = {
-            #     'blank': f'please {message} {verbose_name}',
-            #     'required': f'please {message} {verbose_name}',
-            #     'invalid': f'please {message} {verbose_name} in the valid format',
-            # }
-
-            if field_dict:
-                field_dict.setdefault('error_messages', {})
-                field_dict['error_messages'] = default_error_messages | field_dict['error_messages']
-
-            else:
-                extra_kwargs[field_name] = {'error_messages': default_error_messages}
-
-        return extra_kwargs
-
-    def get_extra_kwargs(self):
-        extra_kwargs = super().get_extra_kwargs()
-        extra_kwargs = self.set_default_error_messages(extra_kwargs)
-
-        return extra_kwargs
-
-    def get_field_names(self, declared_fields, info):
-        self.fields = super().get_field_names(declared_fields, info)
-
-        return self.fields
-
-    # TODO : nested model create 시 테스트 필요
-    def is_valid(self, *, raise_exception=False):
         assert hasattr(self, 'initial_data'), (
             'Cannot call `.is_valid()` as no `data=` keyword argument was '
             'passed when instantiating the serializer instance.'
@@ -150,15 +43,46 @@ class ModelSerializer(ResponseErrorSerializerMixin, serializers.ModelSerializer)
 
             self._errors = {
                 "error": first_error
-                # "error": first_error[0] if isinstance(first_error, list) else first_error
             }
-
-            # self._errors = {key: [ErrorDetail(message) for message in value] for key, value in self._errors.items()[0]}
 
             if raise_exception:
                 raise ValidationError(self.errors)
 
         return not bool(self._errors)
+
+
+class Serializer(ResponseErrorSerializerMixin, serializers.Serializer):
+    pass
+
+
+class ModelSerializer(ResponseErrorSerializerMixin, serializers.ModelSerializer):
+    serializer_field_mapping = serializers.ModelSerializer.serializer_field_mapping
+    serializer_field_mapping[models.BooleanField] = BooleanField
+    serializer_field_mapping[models.CharField] = CharField
+    serializer_field_mapping[models.DateField] = DateField
+    serializer_field_mapping[models.DurationField] = DurationField
+    serializer_field_mapping[models.DateTimeField] = DateTimeField
+    serializer_field_mapping[models.EmailField] = EmailField
+    serializer_field_mapping[models.FileField] = FileField
+    serializer_field_mapping[models.FloatField] = FloatField
+    serializer_field_mapping[models.IntegerField] = IntegerField
+    serializer_field_mapping[models.PositiveIntegerField] = IntegerField
+    serializer_field_mapping[models.TextField] = CharField
+    serializer_field_mapping[models.TimeField] = TimeField
+    serializer_field_mapping[models.URLField] = URLField
+
+    serializer_related_field = PrimaryKeyRelatedField
+    serializer_choice_field = ChoiceField
+
+    def get_extra_kwargs(self):
+        extra_kwargs = super().get_extra_kwargs()
+
+        return extra_kwargs
+
+    def get_field_names(self, declared_fields, info):
+        self.fields = super().get_field_names(declared_fields, info)
+
+        return self.fields
 
 
 class ListSerializer(serializers.ListSerializer):
