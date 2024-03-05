@@ -6,13 +6,16 @@ from django.conf import settings
 from django.contrib.staticfiles import finders
 from django.utils.http import http_date
 from django.utils._os import safe_join
-
+from django.http.response import HttpResponseBadRequest
 from fileserver.utils import sendfile
 
 
 async def static_serve(request, path, insecure=False, **kwargs):
     normalized_path = posixpath.normpath(path).lstrip("/")
     absolute_path = finders.find(normalized_path)
+    if not absolute_path:
+        return HttpResponseBadRequest(f"Invalid path: {path}")
+
     document_root, path = os.path.split(absolute_path)
     fullpath = Path(safe_join(document_root, path))
     statobj = fullpath.stat()
