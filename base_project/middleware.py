@@ -88,65 +88,6 @@ class RequestLogMiddleware:
         return response
 
 
-class ResponseFormattingMiddleware:
-    """client error 통일"""
-
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        response = self.get_response(request)
-
-        if not is_client_error(response.status_code) or not hasattr(response, "data"):
-            return response
-
-        if "insomnia" in request.headers.get("user_agent", "") or \
-           "Postman" in request.headers.get("user_agent", ""):
-            response_data = self.get_api_client_response(response)
-
-        else:
-            response_data = self.get_process_response(response)
-
-        response.data = response_data
-        response.content = response.render().rendered_content
-        return response
-
-    def get_process_response(self, response):
-        """
-        drf에서 로그를 2개 이상 리턴 해 줄 경우 1개만 출력하도록 수정
-        log key "error"로 통일
-        """
-        data = response.data
-        data_key = ''
-
-        if isinstance(data, list) and len(data) >= 2:
-            data = [max(data, key=len)]
-
-        while not isinstance(data, str):
-
-            if not data:
-                break
-
-            if isinstance(data, list):
-                data = data[0]
-                if data == "이 필드는 필수 항목입니다.":
-                    data = f"{data_key}는 필수 항목입니다."
-
-            else:
-                for k, v in data.items():
-                    data_key = k
-                    data = v
-                    break
-
-        return {"error": data}
-
-    def get_api_client_response(self, response):
-        return {
-            "origin": response.data,
-            "processed_response": self.get_process_response(response)
-        }
-
-
 class LoggedInUserMiddleware:
 
     def __init__(self, get_response):
