@@ -47,7 +47,7 @@ class SingletonModel(Model):
 class CheckVerboseNameAttributeMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.verbose_name = self.verbose_name.replace("_", " ").strip()
+        self.verbose_name = self.verbose_name.replace("_", " ").strip() if isinstance(self.verbose_name, str) else ""
 
     def _check_verbose_name_attribute(self, **kwargs):
         if not self._verbose_name:
