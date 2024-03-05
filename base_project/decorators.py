@@ -5,7 +5,7 @@ from django.core.cache import cache
 
 from rest_framework.response import Response
 
-from acs.utils import get_cached_list
+from base_project.utils import get_cached_list
 
 
 def caching_view(caching_request_data=True, alias=None):

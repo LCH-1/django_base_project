@@ -12,7 +12,7 @@ from django.db.utils import OperationalError
 
 
 def run():
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'acs.settings')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'base_project.settings')
     django.setup(set_prefix=False)
     if settings.DEBUG:
         logger.debug("################################################")
