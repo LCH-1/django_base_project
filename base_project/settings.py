@@ -71,9 +71,9 @@ REST_FRAMEWORK = {
     ],
 
     'DEFAULT_PARSER_CLASSES': [
-        'rest_framework.parsers.JSONParser',
-        'rest_framework.parsers.FormParser',
-        'rest_framework.parsers.MultiPartParser'
+        f'{PROJECT_NAME}.parsers.RemoveEmptyValueJSONParser',
+        f'{PROJECT_NAME}.parsers.RemoveEmptyValueFormParser',
+        f'{PROJECT_NAME}.parsers.RemoveEmptyValueMultiPartParser',
     ],
     'EXCEPTION_HANDLER': f'{PROJECT_NAME}.views.list_to_string_exception_handler',
 }
