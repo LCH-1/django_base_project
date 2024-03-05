@@ -29,6 +29,10 @@ ALLOWED_HOSTS = [
     "127.0.0.1", "127.0.0.1:3000",
 ]
 
+if os.path.exists('.env'):
+    from dotenv import read_dotenv
+    read_dotenv(BASE_DIR)
+
 if DEBUG:
     ALLOWED_HOSTS = ['*']
     CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000", ]

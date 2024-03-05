@@ -1,6 +1,7 @@
 Django
 django-ckeditor
 django-cleanup
+django-dotenv
 djangorestframework
 drf-spectacular
 drf-spectacular-sidecar
