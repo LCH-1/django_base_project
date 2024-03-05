@@ -7,6 +7,11 @@ from django.contrib.staticfiles import finders
 from django.utils.http import http_date
 from django.utils._os import safe_join
 from django.http.response import HttpResponseBadRequest
+from django.core.exceptions import ValidationError
+
+from rest_framework.views import exception_handler
+
+from base_project.serializers import ValidationError
 from fileserver.utils import sendfile
 
 
@@ -28,3 +33,25 @@ async def static_serve(request, path, insecure=False, **kwargs):
 
 async def static_view(request, path, document_root=None, show_indexes=False):
     return await sendfile(request, path, root_path=settings.STATIC_ROOT)
+
+
+def list_to_string_exception_handler(exc, context):
+    response = exception_handler(exc, context)
+    if isinstance(exc, ValidationError) and isinstance(exc.detail, dict):
+        data = {}
+        for key, value in exc.detail.items():
+            if isinstance(value, list):
+                value_ = value[0]
+            else:
+                value_ = value
+
+            if value_ == "True":
+                value_ = True
+            elif value_ == "False":
+                value_ = False
+
+            data[key] = value_
+
+        response.data = data
+
+    return response

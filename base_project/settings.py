@@ -75,6 +75,7 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.FormParser',
         'rest_framework.parsers.MultiPartParser'
     ],
+    'EXCEPTION_HANDLER': f'{PROJECT_NAME}.views.list_to_string_exception_handler',
 }
 
 if DEBUG:
