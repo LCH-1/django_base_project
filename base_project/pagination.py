@@ -4,6 +4,11 @@ from functools import lru_cache
 
 
 class PageNumberPagination(pagination.PageNumberPagination):
+    """
+    pagination 양식 정의
+    get_pagination_class 함수를 통해 동적으로 page_size를 설정하여 사용
+    """
+
     def get_paginated_response(self, data):
         return Response({
             "links": {

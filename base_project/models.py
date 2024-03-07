@@ -10,6 +10,11 @@ from django.template.defaultfilters import filesizeformat
 
 
 class Model(models.Model):
+    """
+    __str__이 작성되지 않은 경우 raise
+    default ordering을 -pk로 설정
+    """
+
     def __str__(self):
         raise NotImplementedError('`__str__()` must be implemented.')
 
@@ -19,6 +24,10 @@ class Model(models.Model):
 
 
 class SingletonManager(models.Manager):
+    """
+    singleton model의 객체를 반환하고 없는 경우 None을 반환
+    """
+
     def get(self, *args, **kwargs):
         try:
             return super().get()
@@ -27,6 +36,9 @@ class SingletonManager(models.Manager):
 
 
 class SingletonModel(Model):
+    """
+    record를 한개 이상 생성하지 못하도록 하는 모델
+    """
     objects = SingletonManager()
 
     class Meta:
@@ -47,6 +59,10 @@ class SingletonModel(Model):
 
 
 class CheckVerboseNameAttributeMixin:
+    """
+    필드에 verbose_name이 정의되어 있는지 체크하는 mixin
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -68,6 +84,10 @@ class CheckVerboseNameAttributeMixin:
 
 
 class CheckRelatedNameAttributeMixin:
+    """
+    외래 키 필드에 related_name이 정의되어 있는지 체크하는 mixin
+    """
+
     def _check_related_name_attribute(self, **kwargs):
         if not self._related_name:
             return [
@@ -86,6 +106,10 @@ class CheckRelatedNameAttributeMixin:
 
 
 class CharField(CheckVerboseNameAttributeMixin, models.CharField):
+    """
+    choices가 정의되어 있는 경우 default를 choices의 첫번째 값으로 설정
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.choices and self.default == models.fields.NOT_PROVIDED:
@@ -106,6 +130,10 @@ class OneToOneField(CheckVerboseNameAttributeMixin, models.OneToOneField):
 
 
 class FieldFile(BaseFieldFile):
+    """
+    protected 옵션 여부에 따라 그에 맞는 path를 반환
+    """
+
     def _get_path(self, base_path):
         if not self.field.protected:
             return base_path
@@ -116,22 +144,21 @@ class FieldFile(BaseFieldFile):
     def url(self):
         return self._get_path(super().url)
 
-    # def __str__(self):
-    #     return self._get_path(self.name)
-
 
 class FileField(CheckVerboseNameAttributeMixin, models.FileField):
     """
-    Same as FileField, but you can specify:
-        * allowed_content_types - list containing allowed content_types. Example: ['pdf', 'png', 'jpg', 'jpeg']
-        * max_upload_size - a number indicating the maximum file size allowed for upload.
-            Examples
-             - 1024 # 1kb
-             - 10 * 1024 # 10kb
-             - 10 * 1024 * 1024 # 10mb
-             - 1kb
-             - 10mb
-             - 1g or 10g
+    기존 FileField에서 확장자, 용량 관련 옵션 추가
+    kwargs:
+        allowed_content_types(optional) - list containing allowed content_types.
+          Example: ['pdf', 'png', 'jpg', 'jpeg']
+        max_upload_size(optional) - a number indicating the maximum file size allowed for upload.
+          Examples
+           - 1024 # 1kb
+           - 10 * 1024 # 10kb
+           - 10 * 1024 * 1024 # 10mb
+           - 1kb
+           - 10mb
+           - 1g or 10g
     """
     attr_class = FieldFile
 

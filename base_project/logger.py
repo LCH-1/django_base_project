@@ -28,12 +28,16 @@ DEFAULT_SETTING = {
 
 
 class DefaultLogHandler(RichHandler):
+    """ 기본적으로 사용되는 핸들러 """
+
     def __init__(self, *args, **kwargs):
         kwargs.update(DEFAULT_SETTING)
         super().__init__(*args, **kwargs)
 
 
 class ConsoleLogHandler(RichHandler):
+    """ 콘솔에 로그를 출력하는 핸들러 """
+
     def __init__(self, *args, **kwargs):
         kwargs.update(DEFAULT_SETTING)
         kwargs["highlighter"] = NullHighlighter()
@@ -41,6 +45,8 @@ class ConsoleLogHandler(RichHandler):
 
 
 class NoOutputLogHandler(RichHandler):
+    """ 로그를 출력하지 않는 핸들러 """
+
     def __init__(self, *args, **kwargs):
         kwargs.update(DEFAULT_SETTING)
         kwargs["console"] = Console(quiet=True)
@@ -48,6 +54,8 @@ class NoOutputLogHandler(RichHandler):
 
 
 class TimedRotatingFileHandler(logging.handlers.TimedRotatingFileHandler):
+    """ 로그 파일을 날짜별로 생성하는 핸들러 """
+
     def __init__(self, *args, **kwargs):
         path, _ = os.path.split(settings.LOGFILE)
         if path:
@@ -64,6 +72,8 @@ class TimedRotatingFileHandler(logging.handlers.TimedRotatingFileHandler):
 
 
 class LogFileHandler(RichHandler):
+    """ 파일에 로그를 출력하는 핸들러 """
+
     def __init__(self, *args, **kwargs):
         path, _ = os.path.split(settings.LOGFILE)
         if path:
@@ -75,6 +85,8 @@ class LogFileHandler(RichHandler):
 
 
 class CustomLogger(logging.Logger):
+    """ 로그를 로그 출력 시 pretty format 적용 """
+
     def __init__(self, name, level=logging.NOTSET):
         super().__init__(name, level)
         self.manager = logging.Logger.manager
@@ -104,14 +116,16 @@ class CustomLogger(logging.Logger):
         self.error("End of exception info, code is steel running")
 
     def findCaller(self, stack_info=False, stacklevel=1):
-        # 정확한 filename 추적을 위해 stacklevel을 3으로 설정
-        if settings.DEBUG:
+        # 정확한 filename 추적을 위해 stacklevel 수정
+        if settings.IS_LOCAL:
             return super().findCaller(stack_info, stacklevel=3)
 
         return super().findCaller(stack_info, stacklevel=4)
 
 
 class DefaultFormatter(logging.Formatter):
+    """ logging에 user 정보를 추가하는 formatter """
+
     def set_record(self, record):
         try:
             from .middleware import local
@@ -136,6 +150,8 @@ class DefaultFormatter(logging.Formatter):
 
 
 class ConsoleFormatter(DefaultFormatter):
+    """ console에 출력하는 log의 lolor style 설정 """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.style = self.configure_style(color_style())

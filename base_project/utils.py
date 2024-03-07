@@ -10,6 +10,10 @@ from django.core.cache import cache
 
 @deconstructible
 class FilenameObfusecate:
+    """
+    filefield에 업로드 되는 파일의 파일명을 무작위로 변경할 때 사용
+    """
+    
     def __init__(self, sub_path):
         self.path = sub_path
 
@@ -76,12 +80,18 @@ def get_prefetch_related_fields(model):
 
 
 def get_cached_list(view_info):
+    """
+    특정 view의 캐싱 목록 확인
+    """
     cached_list_key = f"cached_{view_info}_list"
     cached_list = cache.get(cached_list_key, "[]")
     return cached_list_key, json.loads(cached_list)
 
 
 def clear_cached_view(view_info):
+    """
+    특정 view의 캐싱 데이터 삭제
+    """
     cached_list_key, cached_list = get_cached_list(view_info)
 
     cache.delete_many(cached_list)
@@ -89,10 +99,16 @@ def clear_cached_view(view_info):
 
 
 def clear_all_cache():
+    """
+    모든 캐싱 데이터 삭제
+    """
     cache.clear()
 
 
 def get_client_ip(request):
+    """
+    사용자 ip 주소 반환
+    """
     if x_forwarded_for := request.META.get('HTTP_X_FORWARDED_FOR'):
         ip = x_forwarded_for.split(',')[0]
     else:

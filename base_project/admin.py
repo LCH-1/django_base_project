@@ -20,6 +20,10 @@ from django.core.exceptions import PermissionDenied, FieldDoesNotExist
 
 
 class ReadonlyMixin:
+    """
+
+    model을 admin에서 수정할 수 없도록 함
+    """
     set_all_fields_readonly = True
 
     def has_add_permission(self, request, obj=None):
@@ -33,6 +37,9 @@ class ReadonlyMixin:
 
 
 class ReadonlyInlineMixin(ReadonlyMixin):
+    """
+    Inline model을 admin에서 수정할 수 없도록 함
+    """
     can_delete = False
 
     def __init__(self, *args, **kwargs):
@@ -55,6 +62,28 @@ class ReadonlyInlineMixin(ReadonlyMixin):
 
 
 class AdminMixin:
+    """
+    _get_related_link()
+     - admin 페이지에서 보여지는 field에 fk, m2m, o2o 관계를 가진 model의 링크를 생성
+
+    get_inlines()
+     - 데이터 생성 시 readonly로 지정된 mixin을 작성할 수 없도록 함
+
+    get_fields()
+     - admin 페이지에서 보여지는 field의 순서를 models.py에 정의된 순서대로 변경
+
+    add_view()
+     - 특정 상황에서 admin add 페이지에서 pk가 추가되는 문제 방지
+
+    change_view(self, request, object_id, form_url="", extra_context=None):
+     - get_readonly_fields에서 사용될 _fields 저장
+
+    get_readonly_fields()
+     - ModelAdmin에서 model field에 존재하지 않는 field를 추가해서 사용할 경우
+       자동으로 read_only_fields하여 에러가 발생하는 것을 방지
+
+    """
+
     disable_auto_readonly_fields = False
     disable_ordering_fields = False
     disable_setup_fields = False
@@ -134,6 +163,10 @@ class TabularInline(AdminMixin, admin.TabularInline):
 
 
 class SingletonModelAdmin(ModelAdmin):
+    """
+    admin 페이지에서 record를 하나만 생성할 수 있도록 함
+    """
+
     def has_add_permission(self, request):
         if self.model.objects.exists():
             return False
@@ -142,6 +175,12 @@ class SingletonModelAdmin(ModelAdmin):
 
 
 class AdminSite(admin.AdminSite):
+    """
+    admin 페이지에서 보여지는 model 순서 변겅
+     - 기존 : a~z
+     - 변경 : admin.site.register()에 등록된 순서
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._registry_order = []

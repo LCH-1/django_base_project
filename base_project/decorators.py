@@ -9,6 +9,20 @@ from base_project.utils import get_cached_list
 
 
 def caching_view(caching_request_data=True, alias=None):
+    """
+    view에 들어오는 동일한 요청에 대해 응답을 캐싱하는 데코레이터
+    args:
+        caching_request_data(optional): request.GET의 parameter를 캐싱 키에 포함할지 여부
+        alias(optional): 캐싱 키를 직접 지정할 경우 사용
+
+    Example:
+    class UserViewSet(viewsets.ModelViewSet):
+        ...
+        @caching_view(alias="${some alias}", caching_request_data=False)
+        @action(detail=False, methods=["GET"])
+        def some_function(self, request):
+            ...
+    """
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped_view(instance, request, *args, **kwargs):

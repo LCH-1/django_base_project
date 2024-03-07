@@ -89,6 +89,7 @@ class RequestLogMiddleware:
 
 
 class LoggedInUserMiddleware:
+    """user info를 logging 하기 위해 사용"""
 
     def __init__(self, get_response):
         self.get_response = get_response

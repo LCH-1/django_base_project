@@ -2,6 +2,10 @@ from rest_framework.routers import Route, DynamicRoute, DefaultRouter
 
 
 class UserRouter(DefaultRouter):
+    """
+    UserViewSet을 위한 router
+    사용자 정보(retrieve) 조회 시 request.user를 사용, pk 불필요
+    """
     routes = [
         Route(
             url=r'^{prefix}{trailing_slash}$',
@@ -32,11 +36,11 @@ class UserRouter(DefaultRouter):
 
 class CustomActionUrlRouter(DefaultRouter):
     """
-        action(detail=True)로 설정 시 url 구조 변경
-        기본 url 구조
-         - ${pk}/${action_url}/
-        수정된 url 구조
-         - ${action_url}/${pk(optional)}/
+    action(detail=True)로 설정 시 url 구조 변경
+    기본 url 구조
+        - ${pk}/${action_url}/
+    수정된 url 구조
+        - ${action_url}/${pk(optional)}/
     """
     routes = [
         # List route.

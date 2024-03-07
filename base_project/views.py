@@ -16,6 +16,10 @@ from fileserver.utils import sendfile
 
 
 async def static_serve(request, path, insecure=False, **kwargs):
+    """
+    async용 static_server 함수 재정의
+    """
+
     normalized_path = posixpath.normpath(path).lstrip("/")
     absolute_path = finders.find(normalized_path)
     if not absolute_path:
@@ -32,10 +36,17 @@ async def static_serve(request, path, insecure=False, **kwargs):
 
 
 async def static_view(request, path, document_root=None, show_indexes=False):
+    """
+    async용 static_view 함수 재정의
+    """
     return await sendfile(request, path, root_path=settings.STATIC_ROOT)
 
 
 def list_to_string_exception_handler(exc, context):
+    """
+    list 형태의 exception info를 string으로 변환
+    """
+
     response = exception_handler(exc, context)
     if isinstance(exc, ValidationError) and isinstance(exc.detail, dict):
         data = {}

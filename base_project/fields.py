@@ -1,6 +1,4 @@
-from datetime import datetime, date
-
-from django.conf import settings
+from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import fields
@@ -11,6 +9,10 @@ from base_project.utils import ul, yi, wa, en
 
 
 class DefaultErrorMessageMixin:
+    """
+    rest framework에서 사용되는 error message에
+    field의 verbose_name, capital_verbose_name, 한글 조사 추가 지원
+    """
     default_error_messages = {
         'required': _("{capital_verbose_name}'s input is required."),
         'null': _("The {verbose_name} is cannot be empty.")
@@ -55,7 +57,7 @@ class DefaultErrorMessageMixin:
         raise ValidationError(message_string, code=key)
 
 
-# those are using in rest_framework
+# rest framework에서 사용되는 default error message 커스텀
 class FileField(DefaultErrorMessageMixin, fields.FileField):
     default_error_messages = {
         'required': _('No {verbose_name} file was submitted.'),

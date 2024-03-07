@@ -15,6 +15,11 @@ class BasePermission(DjangoBasePermission):
 
 
 def check_login(*args, **kwargs):
+    """
+    사용자의 로그인 여부를 체크하는 decorator
+    kwargs:
+        safe_methods(optional): 권한에 상관 없이 허용할 http method 지정
+    """
     def decorator(func):
         def wrapper(self, request, view):
             # 사용자 login 체크

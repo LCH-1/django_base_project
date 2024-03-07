@@ -19,6 +19,10 @@ from base_project.utils import ul
 
 
 class ResponseErrorSerializerMixin:
+    """
+    error response 시 list가 아닌 string 형태로 반환
+    """
+
     def is_valid(self, *, raise_exception=False, keep_origin=False):
         if keep_origin:
             return super().is_valid(raise_exception=raise_exception)
@@ -56,6 +60,11 @@ class Serializer(ResponseErrorSerializerMixin, serializers.Serializer):
 
 
 class ModelSerializer(ResponseErrorSerializerMixin, serializers.ModelSerializer):
+    """
+    default error message 및 커스텀 옵션들을 적용하기 위해 serializer field mapping 재정의
+
+    """
+
     serializer_field_mapping = serializers.ModelSerializer.serializer_field_mapping
     serializer_field_mapping[models.BooleanField] = BooleanField
     serializer_field_mapping[models.CharField] = CharField
