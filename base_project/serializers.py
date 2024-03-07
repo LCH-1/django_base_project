@@ -74,16 +74,6 @@ class ModelSerializer(ResponseErrorSerializerMixin, serializers.ModelSerializer)
     serializer_related_field = PrimaryKeyRelatedField
     serializer_choice_field = ChoiceField
 
-    def get_extra_kwargs(self):
-        extra_kwargs = super().get_extra_kwargs()
-
-        return extra_kwargs
-
-    def get_field_names(self, declared_fields, info):
-        self.fields = super().get_field_names(declared_fields, info)
-
-        return self.fields
-
 
 class ListSerializer(serializers.ListSerializer):
     def update(self, instance, validated_data):
