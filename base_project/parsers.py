@@ -20,9 +20,9 @@ class RemoveEmptyValueFormParser(RemoveEmptyValueMixin, FormParser):
 class RemoveEmptyValueMultiPartParser(MultiPartParser):
     def parse(self, stream, media_type=None, parser_context=None):
         result = super().parse(stream, media_type=media_type, parser_context=parser_context)
-        data, files = result.data, result.files
+        data = result.data.copy()
 
         for key in [k for k, v in data.items() if v == "" or v is None]:
             del data[key]
 
-        return DataAndFiles(data, files)
+        return DataAndFiles(data, result.files)
