@@ -18,8 +18,8 @@ class DefaultErrorMessageMixin:
 
     def bind(self, field_name, parent):
         super().bind(field_name, parent)
-        self.verbose_name = _(field_name)
-        self.capital_verbose_name = _(field_name).capitalize()
+        self.verbose_name = f"{self.label[0].lower()}{self.label[1:]}"
+        self.capital_verbose_name = force_str(self.label)
 
         self.custom_format_mapping = {
             "{verbose_name}": f"{self.verbose_name}",
