@@ -1,60 +1,663 @@
-# django base project<br>
-ìƒˆë¡œìš´ ì¥ê³  í”„ë¡œì íŠ¸ë¥¼ ì‹œì‘í•  ë•Œ ê¸°ë°˜ìœ¼ë¡œ ì‚¬ìš© í•˜ê¸° ìœ„í•œ í”„ë¡œì íŠ¸ <br><br>
+# Table of Contents
 
-## ìµœì´ˆ í™˜ê²½ ì„¤ì •
-```shell
-# base_projectí´ë”ë¥¼ ì‚¬ìš©í•  project ì´ë¦„ìœ¼ë¡œ ë³€ê²½
-# í”„ë¡œì íŠ¸ ë¬¸ì ì „ì²´ ê²€ìƒ‰ì—ì„œ base_project  -> ì‚¬ìš©í•  project ì´ë¦„ìœ¼ë¡œ ëª¨ë‘ ë³€ê²½
+* [admin](#admin)
+  * [ReadonlyMixin](#admin.ReadonlyMixin)
+  * [ReadonlyInlineMixin](#admin.ReadonlyInlineMixin)
+  * [AdminMixin](#admin.AdminMixin)
+    * [get\_inlines](#admin.AdminMixin.get_inlines)
+    * [get\_fields](#admin.AdminMixin.get_fields)
+    * [add\_view](#admin.AdminMixin.add_view)
+    * [change\_view](#admin.AdminMixin.change_view)
+    * [get\_readonly\_fields](#admin.AdminMixin.get_readonly_fields)
+  * [SingletonModelAdmin](#admin.SingletonModelAdmin)
+  * [AdminSite](#admin.AdminSite)
+* [decorators](#decorators)
+  * [caching\_view](#decorators.caching_view)
+* [fields](#fields)
+  * [DefaultErrorMessageMixin](#fields.DefaultErrorMessageMixin)
+* [logger](#logger)
+  * [DefaultLogHandler](#logger.DefaultLogHandler)
+  * [ConsoleLogHandler](#logger.ConsoleLogHandler)
+  * [NoOutputLogHandler](#logger.NoOutputLogHandler)
+  * [TimedRotatingFileHandler](#logger.TimedRotatingFileHandler)
+  * [LogFileHandler](#logger.LogFileHandler)
+  * [CustomLogger](#logger.CustomLogger)
+  * [DefaultFormatter](#logger.DefaultFormatter)
+  * [ConsoleFormatter](#logger.ConsoleFormatter)
+* [middleware](#middleware)
+  * [RequestLogMiddleware](#middleware.RequestLogMiddleware)
+  * [LoggedInUserMiddleware](#middleware.LoggedInUserMiddleware)
+* [models](#models)
+  * [Model](#models.Model)
+  * [SingletonManager](#models.SingletonManager)
+  * [SingletonModel](#models.SingletonModel)
+  * [CheckVerboseNameAttributeMixin](#models.CheckVerboseNameAttributeMixin)
+  * [CheckRelatedNameAttributeMixin](#models.CheckRelatedNameAttributeMixin)
+  * [FileField](#models.FileField)
+* [pagination](#pagination)
+  * [PageNumberPagination](#pagination.PageNumberPagination)
+* [parsers](#parsers)
+  * [RemoveEmptyValueMixin](#parsers.RemoveEmptyValueMixin)
+  * [RemoveEmptyValueMultiPartParser](#parsers.RemoveEmptyValueMultiPartParser)
+* [permissions](#permissions)
+  * [check\_login](#permissions.check_login)
+  * [IsAuthenticated](#permissions.IsAuthenticated)
+  * [IsAuthenticatedOrCreateOnly](#permissions.IsAuthenticatedOrCreateOnly)
+  * [IsAdminUser](#permissions.IsAdminUser)
+* [routers](#routers)
+  * [UserRouter](#routers.UserRouter)
+  * [CustomActionUrlRouter](#routers.CustomActionUrlRouter)
+* [serializers](#serializers)
+  * [ResponseErrorSerializerMixin](#serializers.ResponseErrorSerializerMixin)
+  * [ModelSerializer](#serializers.ModelSerializer)
+* [utils](#utils)
+  * [FilenameObfusecate](#utils.FilenameObfusecate)
+  * [get\_cached\_list](#utils.get_cached_list)
+  * [clear\_cached\_view](#utils.clear_cached_view)
+  * [clear\_all\_cache](#utils.clear_all_cache)
+  * [get\_client\_ip](#utils.get_client_ip)
+* [views](#views)
+  * [static\_serve](#views.static_serve)
+  * [static\_view](#views.static_view)
+  * [list\_to\_string\_exception\_handler](#views.list_to_string_exception_handler)
+* [viewsets](#viewsets)
+  * [SearchQuerysetMixin](#viewsets.SearchQuerysetMixin)
 
-pip install -r requirements.txt
-python manage.py makemigrations
-python manage.py migrate
+<a id="admin"></a>
+
+# admin
+
+<a id="admin.ReadonlyMixin"></a>
+
+## ReadonlyMixin Objects
+
+```python
+class ReadonlyMixin()
 ```
 
-## ì‹¤í–‰ ë°©ë²•
-```shell
-python manage.py runserver
+modelÀ» admin¿¡¼­ ¼öÁ¤ÇÒ ¼ö ¾øµµ·Ï ÇÔ
+
+<a id="admin.ReadonlyInlineMixin"></a>
+
+## ReadonlyInlineMixin Objects
+
+```python
+class ReadonlyInlineMixin(ReadonlyMixin)
 ```
 
-## API ëª…ì„¸
- * http://localhost:8000/swagger/
- * http://localhost:8000/redoc/
+Inline modelÀ» admin¿¡¼­ ¼öÁ¤ÇÒ ¼ö ¾øµµ·Ï ÇÔ
 
-## ê¸°ëŠ¥
-* ## fields.py
-  * **FileField** : serializerë¥¼ í†µí•´ ì§ë ¬í™” ë  ë•Œ íŒŒì¼ì˜ urlì˜ í˜•íƒœë¥¼ ë‹¤ë¥´ê²Œ ì§€ì •í•©ë‹ˆë‹¤.
+<a id="admin.AdminMixin"></a>
 
-* ## middleware.py
-  * **RequestLogMiddleware** : Client ìš”ì²­ì´ ë“¤ì–´ì™”ì„ ë•Œ `request body, user info, content type` ë“±ì˜ ì •ë³´ë¥¼ ì¶œë ¥í•´ ë””ë²„ê¹…ì„ ìš©ì´í•˜ê²Œ í•©ë‹ˆë‹¤.
-  * **ResponseFormattingMiddleware** : djangoì˜ error response í¬ë§·ì„ `{"error": "message"}`ë¡œ í†µì¼ì‹œí‚µë‹ˆë‹¤.
+## AdminMixin Objects
 
-* ## models.py
-  * **Model** : `__str__`ì„ ì„¤ì •í•˜ì§€ ì•Šì„ ê²½ìš° linting ì—ëŸ¬ë¥¼ ë°œìƒì‹œí‚¤ë©°, pkë¥¼ ê¸°ë³¸ orderingìœ¼ë¡œ ì„¤ì •í•©ë‹ˆë‹¤.
-  * **CheckVerboseNameAttributeMixin** : `verbose_name` ì˜µì…˜ì´ ì¡´ì¬í•˜ì§€ ì•Šì„ ê²½ìš° ì—ëŸ¬ë¥¼ ë°œìƒì‹œí‚µë‹ˆë‹¤.
-  * **CheckRelatedNameAttributeMixin** : `related_name` ì˜µì…˜ì´ ì¡´ì¬í•˜ì§€ ì•Šì„ ê²½ìš° ì—ëŸ¬ë¥¼ ë°œìƒì‹œí‚µë‹ˆë‹¤.
-  * **FileField** : `upload_to` ì˜µì…˜ì„ ì‚¬ìš©í•˜ì§€ ì•Šìœ¼ë©° ê¸°ë³¸ ì—…ë¡œë“œ ê²½ë¡œë¥¼ `MEDIA_URL/${model_name}/${field_name}` ìœ¼ë¡œ ì„¤ì •í•©ë‹ˆë‹¤. <br>
-  protected ì˜µì…˜ì„ ì§€ì›í•©ë‹ˆë‹¤. `protected=True` ì˜µì…˜ì´ ì¡´ì¬í•  ê²½ìš° í•´ë‹¹ íŒŒì¼ì€ ê¶Œí•œì´ ìˆëŠ” ì‚¬ìš©ìë§Œ ì ‘ê·¼í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤. <br>
-  protected ì„¤ì •ì„ í•  ê²½ìš° í•´ë‹¹ ëª¨ë¸ì— `has_${field_name}_permission` ë©”ì†Œë“œë¥¼ ìƒì„±í•´ ê¶Œí•œì„ ì§€ì •í•´ì•¼ í•©ë‹ˆë‹¤.
+```python
+class AdminMixin()
+```
 
-* ## logger.py
-  * rich ë¼ì´ë¸ŒëŸ¬ë¦¬ë¥¼ ì‚¬ìš©í•´ ë” ê°€ë…ì„± ì¢‹ì€ í˜•íƒœë¡œ logging í•´ì£¼ë©°, console loggingê³¼ í•¨ê»˜ ë³„ë„ì˜ íŒŒì¼ì—ë„ ë¡œê·¸ ë°ì´í„°ë¥¼ ìŒ“ìŠµë‹ˆë‹¤.
+admin¿¡ ±âº»ÀûÀ¸·Î »ç¿ëµÇ´Â mixin
 
-* ## pagination.py
-  * **PageNumberPagination** : PageNumberPaginationì„ ìƒì†ë°›ìœ¼ë©°, paginationì— í•„ìš”í•œ ì •ë³´ë“¤ì„ í•¨ê»˜ ë¦¬í„´í•©ë‹ˆë‹¤.
-  * **get_pagination_class** : pagi_sizeë¥¼ ì„ì˜ë¡œ ì§€ì •í•´ ë™ì ìœ¼ë¡œ PageNumberPaginationë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
+<a id="admin.AdminMixin.get_inlines"></a>
 
-* ## permissions.py
-  * **GenericAPIException** : `APIException`ì„ ìƒì†ë°›ì•„ status codeë¥¼ ìœ ë™ì ìœ¼ë¡œ ë³€ê²½í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
-  * **BasePermission** : `BasePermission`ì„ ìƒì†ë°›ì•„ default messageë¥¼ ìœ ë™ì ìœ¼ë¡œ ë³€ê²½í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
-  * **check_login** : class methodì˜ decoratorë¡œ ì‚¬ìš©í•˜ë©°, ì‚¬ìš©ìì˜ ë¡œê·¸ì¸ ì—¬ë¶€ë¥¼ íŒë‹¨í•©ë‹ˆë‹¤. `safe_methods`ë¥¼ ì¸ìë¡œ ë°›ì•„ íŠ¹ì • ìš”ì²­ì— ëŒ€í•´ì„œëŠ” login checkë¥¼ passí•©ë‹ˆë‹¤.
+#### get\_inlines
 
-* ## router.py
-  * **CustomRouter** : `DefaultRouter`ë¥¼ ìƒì†ë°›ì•„ viewsetsì˜ routerë¥¼ ì§€ì •í•  ë•Œ url êµ¬ì¡°ë¥¼ ë³€ê²½ì‹œí‚¨ routerì…ë‹ˆë‹¤. ë¡œê·¸ì¸ í•œ ì‚¬ìš©ì ë³¸ì¸ì˜ ë°ì´í„°ë¥¼ ë‹¤ë£° ë•Œì™€ ê°™ì´ modelì˜ pkë¥¼ ì§€ì •í•˜ì§€ ì•Šê³  CRUDë¥¼ ë‹¤ë£° ë•Œ ì‚¬ìš©ë©ë‹ˆë‹¤.
+```python
+def get_inlines(request, obj)
+```
+
+µ¥ÀÌÅÍ »ı¼º ½Ã readonly·Î ÁöÁ¤µÈ mixinÀ» ÀÛ¼ºÇÒ ¼ö ¾øµµ·Ï ÇÔ
+
+<a id="admin.AdminMixin.get_fields"></a>
+
+#### get\_fields
+
+```python
+def get_fields(request, obj=None)
+```
+
+admin ÆäÀÌÁö¿¡¼­ º¸¿©Áö´Â fieldÀÇ ¼ø¼­¸¦ models.py¿¡ Á¤ÀÇµÈ ¼ø¼­´ë·Î º¯°æ
+
+<a id="admin.AdminMixin.add_view"></a>
+
+#### add\_view
+
+```python
+def add_view(request, form_url="", extra_context=None)
+```
+
+Æ¯Á¤ »óÈ²¿¡¼­ admin add ÆäÀÌÁö¿¡¼­ pk°¡ Ãß°¡µÇ´Â ¹®Á¦ ¹æÁö
+
+<a id="admin.AdminMixin.change_view"></a>
+
+#### change\_view
+
+```python
+def change_view(request, object_id, form_url="", extra_context=None)
+```
+
+get_readonly_fields¿¡¼­ »ç¿ëµÉ _fields ÀúÀå
+
+<a id="admin.AdminMixin.get_readonly_fields"></a>
+
+#### get\_readonly\_fields
+
+```python
+def get_readonly_fields(request, obj=None)
+```
+
+ModelAdmin¿¡¼­ model field¿¡ Á¸ÀçÇÏÁö ¾Ê´Â field¸¦ Ãß°¡ÇØ¼­ »ç¿ëÇÒ °æ¿ì
+ÀÚµ¿À¸·Î read_only_fieldsÇÏ¿© ¿¡·¯°¡ ¹ß»ıÇÏ´Â °ÍÀ» ¹æÁö
+
+<a id="admin.SingletonModelAdmin"></a>
+
+## SingletonModelAdmin Objects
+
+```python
+class SingletonModelAdmin(ModelAdmin)
+```
+
+admin ÆäÀÌÁö¿¡¼­ record¸¦ ÇÏ³ª¸¸ »ı¼ºÇÒ ¼ö ÀÖµµ·Ï ÇÔ
+
+<a id="admin.AdminSite"></a>
+
+## AdminSite Objects
+
+```python
+class AdminSite(admin.AdminSite)
+```
+
+admin ÆäÀÌÁö¿¡¼­ º¸¿©Áö´Â model ¼ø¼­ º¯°Ï
+- ±âÁ¸ : a~z
+- º¯°æ : admin.site.register()¿¡ µî·ÏµÈ ¼ø¼­
+
+<a id="decorators"></a>
+
+# decorators
+
+<a id="decorators.caching_view"></a>
+
+#### caching\_view
+
+```python
+def caching_view(caching_request_data=True, alias=None)
+```
+
+view¿¡ µé¾î¿À´Â µ¿ÀÏÇÑ ¿äÃ»¿¡ ´ëÇØ ÀÀ´äÀ» Ä³½ÌÇÏ´Â µ¥ÄÚ·¹ÀÌÅÍ
+
+**Arguments**:
+
+- `caching_request_data` _bool, optional_ - request.GETÀÇ parameter¸¦ Ä³½Ì Å°¿¡ Æ÷ÇÔÇÒÁö ¿©ºÎ. Defaults to True.
+- `alias` _str, optional_ - Ä³½Ì Å°¸¦ Á÷Á¢ ÁöÁ¤ÇÒ °æ¿ì »ç¿ë. Defaults to None.
   
-* ## serializers.py
-  * **ModelSerializer** : ModelSerializerë¥¼ ìƒì†ë°›ìœ¼ë©°, error messageë¥¼ ê¸°ë³¸ì ìœ¼ë¡œ ì„¤ì •í•´ì¤ë‹ˆë‹¤.
-  * **WritableSerializerMethodField** : SerializerMethodFieldë¥¼ ìƒì†ë°›ìœ¼ë©°, ê¸°ë³¸ì ìœ¼ë¡œ read_only ì†ì„±ìœ¼ë¡œë§Œ ì‚¬ìš© ê°€ëŠ¥í•œ ê²ƒê³¼ëŠ” ë‹¤ë¥´ê²Œ read/write ëª¨ë‘ ê°€ëŠ¥í•©ë‹ˆë‹¤.
-  * **PrimaryKeyRelatedWriteField** : PrimaryKeyRelatedFieldë¥¼ ìƒì†ë°›ìœ¼ë©°, modelì—ì„œ fk í˜¹ì€ otoìœ¼ë¡œ ì •ì˜ëœ í•„ë“œì˜ idë¥¼ ì§€ì •í•  ë•Œ ì‚¬ìš©ë©ë‹ˆë‹¤.
 
-* ## validator.py
-  * **PHONE_VALIDATOR** : í•¸ë“œí°ë²ˆí˜¸ì˜ ìœ íš¨ì„±ì„ ê²€ì¦í•©ë‹ˆë‹¤.
+**Example**:
+
+  class UserViewSet(viewsets.ModelViewSet):<br>
+¡¡¡¡...<br>
+¡¡¡¡@caching_view(alias="${some alias}", caching_request_data=False)<br>
+¡¡¡¡@action(detail=False, methods=["GET"])<br>
+¡¡¡¡def some_function(self, request):<br>
+¡¡¡¡¡¡¡¡...<br>
+
+<a id="fields"></a>
+
+# fields
+
+<a id="fields.DefaultErrorMessageMixin"></a>
+
+## DefaultErrorMessageMixin Objects
+
+```python
+class DefaultErrorMessageMixin()
+```
+
+rest framework¿¡¼­ »ç¿ëµÇ´Â error message¿¡
+fieldÀÇ verbose_name, capital_verbose_name, ÇÑ±Û Á¶»ç Ãß°¡ Áö¿ø
+
+<a id="logger"></a>
+
+# logger
+
+<a id="logger.DefaultLogHandler"></a>
+
+## DefaultLogHandler Objects
+
+```python
+class DefaultLogHandler(RichHandler)
+```
+
+±âº»ÀûÀ¸·Î »ç¿ëµÇ´Â ÇÚµé·¯
+
+<a id="logger.ConsoleLogHandler"></a>
+
+## ConsoleLogHandler Objects
+
+```python
+class ConsoleLogHandler(RichHandler)
+```
+
+ÄÜ¼Ö¿¡ ·Î±×¸¦ Ãâ·ÂÇÏ´Â ÇÚµé·¯
+
+<a id="logger.NoOutputLogHandler"></a>
+
+## NoOutputLogHandler Objects
+
+```python
+class NoOutputLogHandler(RichHandler)
+```
+
+·Î±×¸¦ Ãâ·ÂÇÏÁö ¾Ê´Â ÇÚµé·¯
+
+<a id="logger.TimedRotatingFileHandler"></a>
+
+## TimedRotatingFileHandler Objects
+
+```python
+class TimedRotatingFileHandler(logging.handlers.TimedRotatingFileHandler)
+```
+
+·Î±× ÆÄÀÏÀ» ³¯Â¥º°·Î »ı¼ºÇÏ´Â ÇÚµé·¯
+
+<a id="logger.LogFileHandler"></a>
+
+## LogFileHandler Objects
+
+```python
+class LogFileHandler(RichHandler)
+```
+
+ÆÄÀÏ¿¡ ·Î±×¸¦ Ãâ·ÂÇÏ´Â ÇÚµé·¯
+
+<a id="logger.CustomLogger"></a>
+
+## CustomLogger Objects
+
+```python
+class CustomLogger(logging.Logger)
+```
+
+·Î±×¸¦ ·Î±× Ãâ·Â ½Ã pretty format Àû¿ë
+
+<a id="logger.DefaultFormatter"></a>
+
+## DefaultFormatter Objects
+
+```python
+class DefaultFormatter(logging.Formatter)
+```
+
+logging¿¡ user Á¤º¸¸¦ Ãß°¡ÇÏ´Â formatter
+
+<a id="logger.ConsoleFormatter"></a>
+
+## ConsoleFormatter Objects
+
+```python
+class ConsoleFormatter(DefaultFormatter)
+```
+
+console¿¡ Ãâ·ÂÇÏ´Â logÀÇ color style ¼³Á¤
+
+<a id="middleware"></a>
+
+# middleware
+
+<a id="middleware.RequestLogMiddleware"></a>
+
+## RequestLogMiddleware Objects
+
+```python
+class RequestLogMiddleware()
+```
+
+Request / Response logging
+
+<a id="middleware.LoggedInUserMiddleware"></a>
+
+## LoggedInUserMiddleware Objects
+
+```python
+class LoggedInUserMiddleware()
+```
+
+user info¸¦ logging ÇÏ±â À§ÇØ »ç¿ë
+
+<a id="models"></a>
+
+# models
+
+<a id="models.Model"></a>
+
+## Model Objects
+
+```python
+class Model(models.Model)
+```
+
+__str__ÀÌ ÀÛ¼ºµÇÁö ¾ÊÀº °æ¿ì raise
+default orderingÀ» -pk·Î ¼³Á¤
+
+<a id="models.SingletonManager"></a>
+
+## SingletonManager Objects
+
+```python
+class SingletonManager(models.Manager)
+```
+
+singleton modelÀÇ °´Ã¼¸¦ ¹İÈ¯ÇÏ°í ¾ø´Â °æ¿ì NoneÀ» ¹İÈ¯
+
+<a id="models.SingletonModel"></a>
+
+## SingletonModel Objects
+
+```python
+class SingletonModel(Model)
+```
+
+record¸¦ ÇÑ°³ ÀÌ»ó »ı¼ºÇÏÁö ¸øÇÏµµ·Ï ÇÏ´Â ¸ğµ¨
+
+<a id="models.CheckVerboseNameAttributeMixin"></a>
+
+## CheckVerboseNameAttributeMixin Objects
+
+```python
+class CheckVerboseNameAttributeMixin()
+```
+
+ÇÊµå¿¡ verbose_nameÀÌ Á¤ÀÇµÇ¾î ÀÖ´ÂÁö Ã¼Å©ÇÏ´Â mixin
+
+<a id="models.CheckRelatedNameAttributeMixin"></a>
+
+## CheckRelatedNameAttributeMixin Objects
+
+```python
+class CheckRelatedNameAttributeMixin()
+```
+
+¿Ü·¡ Å° ÇÊµå¿¡ related_nameÀÌ Á¤ÀÇµÇ¾î ÀÖ´ÂÁö Ã¼Å©ÇÏ´Â mixin
+
+<a id="models.FileField"></a>
+
+## FileField Objects
+
+```python
+class FileField(CheckVerboseNameAttributeMixin, models.FileField)
+```
+
+±âÁ¸ FileField¿¡¼­ È®ÀåÀÚ, ¿ë·® °ü·Ã ¿É¼Ç Ãß°¡
+Kwargs:
+allowed_content_types (bool, optional) - list containing allowed content_types.
+
+**Example**:
+
+  - ['pdf', 'png', 'jpg', 'jpeg']
+  
+  max_upload_size (bool, optional) - a number indicating the maximum file size allowed for upload.
+
+**Examples**:
+
+  - 1024 # 1kb
+  - 10 * 1024 # 10kb
+  - 10 * 1024 * 1024 # 10mb
+  - 1kb
+  - 10mb
+  - 1g or 10g
+
+<a id="pagination"></a>
+
+# pagination
+
+<a id="pagination.PageNumberPagination"></a>
+
+## PageNumberPagination Objects
+
+```python
+class PageNumberPagination(pagination.PageNumberPagination)
+```
+
+pagination ¾ç½Ä Á¤ÀÇ
+get_pagination_class ÇÔ¼ö¸¦ ÅëÇØ µ¿ÀûÀ¸·Î page_size¸¦ ¼³Á¤ÇÏ¿© »ç¿ë
+
+<a id="parsers"></a>
+
+# parsers
+
+<a id="parsers.RemoveEmptyValueMixin"></a>
+
+## RemoveEmptyValueMixin Objects
+
+```python
+class RemoveEmptyValueMixin()
+```
+
+Json, Form parserÀÇ empty value Á¦°Å mixin
+
+<a id="parsers.RemoveEmptyValueMultiPartParser"></a>
+
+## RemoveEmptyValueMultiPartParser Objects
+
+```python
+class RemoveEmptyValueMultiPartParser(MultiPartParser)
+```
+
+MultiPartParserÀÇ empty value Á¦°Å
+
+<a id="permissions"></a>
+
+# permissions
+
+<a id="permissions.check_login"></a>
+
+#### check\_login
+
+```python
+def check_login(*args, **kwargs)
+```
+
+»ç¿ëÀÚÀÇ ·Î±×ÀÎ ¿©ºÎ¸¦ Ã¼Å©ÇÏ´Â decorator
+kwargs:
+safe_methods(optional): ±ÇÇÑ¿¡ »ó°ü ¾øÀÌ Çã¿ëÇÒ http method ÁöÁ¤
+
+<a id="permissions.IsAuthenticated"></a>
+
+## IsAuthenticated Objects
+
+```python
+class IsAuthenticated(BasePermission)
+```
+
+·Î±×ÀÎ ÇÑ »ç¿ëÀÚ¸¸ »ç¿ë °¡´É
+
+<a id="permissions.IsAuthenticatedOrCreateOnly"></a>
+
+## IsAuthenticatedOrCreateOnly Objects
+
+```python
+class IsAuthenticatedOrCreateOnly(BasePermission)
+```
+
+·Î±×ÀÎ ÇÑ »ç¿ëÀÚ°¡ ¾Æ´Ï¶ó¸é »ı¼º¸¸ °¡´É
+
+<a id="permissions.IsAdminUser"></a>
+
+## IsAdminUser Objects
+
+```python
+class IsAdminUser(BasePermission)
+```
+
+admin »ç¿ëÀÚ¸¸ Á¢±Ù °¡´É
+
+<a id="routers"></a>
+
+# routers
+
+<a id="routers.UserRouter"></a>
+
+## UserRouter Objects
+
+```python
+class UserRouter(DefaultRouter)
+```
+
+UserViewSetÀ» À§ÇÑ router
+»ç¿ëÀÚ Á¤º¸(retrieve) Á¶È¸ ½Ã request.user¸¦ »ç¿ë, pk ºÒÇÊ¿ä
+
+<a id="routers.CustomActionUrlRouter"></a>
+
+## CustomActionUrlRouter Objects
+
+```python
+class CustomActionUrlRouter(DefaultRouter)
+```
+
+action(detail=True)·Î ¼³Á¤ ½Ã url ±¸Á¶ º¯°æ
+±âº» url ±¸Á¶
+- \${pk}/${action_url}/
+¼öÁ¤µÈ url ±¸Á¶
+- \${action_url}/${pk(optional)}/
+
+<a id="serializers"></a>
+
+# serializers
+
+<a id="serializers.ResponseErrorSerializerMixin"></a>
+
+## ResponseErrorSerializerMixin Objects
+
+```python
+class ResponseErrorSerializerMixin()
+```
+
+error response ½Ã list°¡ ¾Æ´Ñ string ÇüÅÂ·Î ¹İÈ¯
+
+<a id="serializers.ModelSerializer"></a>
+
+## ModelSerializer Objects
+
+```python
+class ModelSerializer(ResponseErrorSerializerMixin,
+                      serializers.ModelSerializer)
+```
+
+default error message ¹× Ä¿½ºÅÒ ¿É¼ÇµéÀ» Àû¿ëÇÏ±â À§ÇØ serializer field mapping ÀçÁ¤ÀÇ
+
+<a id="utils"></a>
+
+# utils
+
+<a id="utils.FilenameObfusecate"></a>
+
+## FilenameObfusecate Objects
+
+```python
+@deconstructible
+class FilenameObfusecate()
+```
+
+filefield¿¡ ¾÷·Îµå µÇ´Â ÆÄÀÏÀÇ ÆÄÀÏ¸íÀ» ¹«ÀÛÀ§·Î º¯°æÇÒ ¶§ »ç¿ë
+
+<a id="utils.get_cached_list"></a>
+
+#### get\_cached\_list
+
+```python
+def get_cached_list(view_info)
+```
+
+Æ¯Á¤ viewÀÇ Ä³½Ì ¸ñ·Ï È®ÀÎ
+
+<a id="utils.clear_cached_view"></a>
+
+#### clear\_cached\_view
+
+```python
+def clear_cached_view(view_info)
+```
+
+Æ¯Á¤ viewÀÇ Ä³½Ì µ¥ÀÌÅÍ »èÁ¦
+
+<a id="utils.clear_all_cache"></a>
+
+#### clear\_all\_cache
+
+```python
+def clear_all_cache()
+```
+
+¸ğµç Ä³½Ì µ¥ÀÌÅÍ »èÁ¦
+
+<a id="utils.get_client_ip"></a>
+
+#### get\_client\_ip
+
+```python
+def get_client_ip(request)
+```
+
+»ç¿ëÀÚ ip ÁÖ¼Ò ¹İÈ¯
+
+<a id="views"></a>
+
+# views
+
+<a id="views.static_serve"></a>
+
+#### static\_serve
+
+```python
+async def static_serve(request, path, insecure=False, **kwargs)
+```
+
+async¿ë static_server ÇÔ¼ö ÀçÁ¤ÀÇ
+
+<a id="views.static_view"></a>
+
+#### static\_view
+
+```python
+async def static_view(request, path, document_root=None, show_indexes=False)
+```
+
+async¿ë static_view ÇÔ¼ö ÀçÁ¤ÀÇ
+
+<a id="views.list_to_string_exception_handler"></a>
+
+#### list\_to\_string\_exception\_handler
+
+```python
+def list_to_string_exception_handler(exc, context)
+```
+
+list ÇüÅÂÀÇ exception info¸¦ stringÀ¸·Î º¯È¯
+
+<a id="viewsets"></a>
+
+# viewsets
+
+<a id="viewsets.SearchQuerysetMixin"></a>
+
+## SearchQuerysetMixin Objects
+
+```python
+class SearchQuerysetMixin()
+```
+
+searches¸¦ ÅëÇØ url query parameter¿¡¼­ °Ë»ö¿¡ »ç¿ëµÉ Å°¿öµå¿Í ÇÊµå¸¦ ÁöÁ¤ÇÒ ¼ö ÀÖ½À´Ï´Ù.<br>
+¾Æ·¡ ¿¹½ÃÀÇ °æ¿ì ?category=main&search=keyword¿Í °°Àº ¿äÃ»¿¡ ´ëÇØ<br>
+°¢°¢ category, title/contents ÇÊµå¿¡ ´ëÇØ queryset filter¸¦ Àû¿ëÇÕ´Ï´Ù.<br>
+type(optional) : °Ë»ö¿¡ »ç¿ëµÉ ÇÊµå¿¡ ´ëÇØ lookupÀ» ÁöÁ¤ÇÒ ¼ö ÀÖÀ¸¸ç, ÁöÁ¤ÇÏÁö ¾ÊÀ» °æ¿ì ÀÏÄ¡ÇÏ´Â Ç×¸ñÀ» °Ë»öÇÕ´Ï´Ù.<br>
+
+**Example**:
+
+¡¡searches = {<br>
+¡¡¡¡'category': {<br>
+¡¡¡¡¡¡'fields': ['category'],<br>
+¡¡¡¡}<br>
+¡¡¡¡'search': {<br>
+¡¡¡¡¡¡'fields': ['title', 'contents'],<br>
+¡¡¡¡¡¡'type': 'icontains'<br>
+¡¡¡¡},<br>
+¡¡}<br>
+
