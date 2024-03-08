@@ -150,7 +150,7 @@ class DefaultFormatter(logging.Formatter):
 
 
 class ConsoleFormatter(DefaultFormatter):
-    """ console에 출력하는 log의 lolor style 설정 """
+    """ console에 출력하는 log의 color style 설정 """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

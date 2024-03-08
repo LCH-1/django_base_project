@@ -33,9 +33,6 @@ class DefaultErrorMessageMixin:
         }
 
     def fail(self, key, **kwargs):
-        """
-        A helper method that simply raises a validation error.
-        """
         try:
             msg = self.error_messages[key]
         except KeyError:

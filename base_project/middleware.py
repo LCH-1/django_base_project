@@ -14,7 +14,7 @@ local = threading.local()
 
 
 class RequestLogMiddleware:
-    """Request / Response Logging"""
+    """Request / Response logging"""
 
     def __init__(self, get_response):
         self.get_response = get_response

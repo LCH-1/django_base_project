@@ -44,14 +44,14 @@ def check_login(*args, **kwargs):
 
 
 class IsAuthenticated(BasePermission):
-    '''로그인 한 사용자만 사용 가능'''
+    """로그인 한 사용자만 사용 가능"""
     @check_login
     def has_permission(self, request, view):
         return True
 
 
 class IsAuthenticatedOrCreateOnly(BasePermission):
-    '''로그인 한 사용자가 아니라면 생성만 가능'''
+    """로그인 한 사용자가 아니라면 생성만 가능"""
 
     @check_login(safe_methods=['POST'])
     def has_permission(self, request, view):
@@ -59,7 +59,7 @@ class IsAuthenticatedOrCreateOnly(BasePermission):
 
 
 class IsAdminUser(BasePermission):
-    '''admin 사용자만 접근 가능'''
+    """admin 사용자만 접근 가능"""
 
     @check_login
     def has_permission(self, request, view):

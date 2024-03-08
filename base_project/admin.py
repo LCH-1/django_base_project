@@ -63,25 +63,7 @@ class ReadonlyInlineMixin(ReadonlyMixin):
 
 class AdminMixin:
     """
-    _get_related_link()
-     - admin 페이지에서 보여지는 field에 fk, m2m, o2o 관계를 가진 model의 링크를 생성
-
-    get_inlines()
-     - 데이터 생성 시 readonly로 지정된 mixin을 작성할 수 없도록 함
-
-    get_fields()
-     - admin 페이지에서 보여지는 field의 순서를 models.py에 정의된 순서대로 변경
-
-    add_view()
-     - 특정 상황에서 admin add 페이지에서 pk가 추가되는 문제 방지
-
-    change_view(self, request, object_id, form_url="", extra_context=None):
-     - get_readonly_fields에서 사용될 _fields 저장
-
-    get_readonly_fields()
-     - ModelAdmin에서 model field에 존재하지 않는 field를 추가해서 사용할 경우
-       자동으로 read_only_fields하여 에러가 발생하는 것을 방지
-
+    admin에 기본적으로 사용되는 mixin
     """
 
     disable_auto_readonly_fields = False
@@ -93,6 +75,9 @@ class AdminMixin:
         self._fields = []
 
     def _get_related_link(self, obj, str_field=None, verbose=None):
+        """
+        admin 페이지에서 보여지는 field에 fk, m2m, o2o 관계를 가진 model의 링크를 생성
+        """
         app_label = obj._meta.app_label
         model_name = obj._meta.model_name
         verbose = verbose or (getattr(obj, str_field, "-") if str_field else str(obj))
@@ -101,6 +86,9 @@ class AdminMixin:
         return format_html(f'<a href="{link}">{verbose}</a>')
 
     def get_inlines(self, request, obj):
+        """
+        데이터 생성 시 readonly로 지정된 mixin을 작성할 수 없도록 함
+        """
         if not obj:
             inlines = super().get_inlines(request, obj)
             return [x for x in inlines if not issubclass(x, ReadonlyInlineMixin)]
@@ -108,6 +96,9 @@ class AdminMixin:
         return super().get_inlines(request, obj)
 
     def get_fields(self, request, obj=None):
+        """
+        admin 페이지에서 보여지는 field의 순서를 models.py에 정의된 순서대로 변경
+        """
         fields = super().get_fields(request, obj)
 
         if not self.fields and not self.disable_ordering_fields:
@@ -119,6 +110,9 @@ class AdminMixin:
         return fields
 
     def add_view(self, request, form_url="", extra_context=None):
+        """
+        특정 상황에서 admin add 페이지에서 pk가 추가되는 문제 방지
+        """
         fields = self.get_fields(request)
 
         if not self.disable_setup_fields:
@@ -131,11 +125,18 @@ class AdminMixin:
         return self.changeform_view(request, None, form_url, extra_context)
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
+        """
+        get_readonly_fields에서 사용될 _fields 저장
+        """
         obj = self.get_object(request, unquote(object_id))
         self._fields = flatten_fieldsets(self.get_fieldsets(request, obj))
         return self.changeform_view(request, object_id, form_url, extra_context)
 
     def get_readonly_fields(self, request, obj=None):
+        """
+        ModelAdmin에서 model field에 존재하지 않는 field를 추가해서 사용할 경우
+        자동으로 read_only_fields하여 에러가 발생하는 것을 방지
+        """
         if not obj:
             return super().get_readonly_fields(request, obj)
 

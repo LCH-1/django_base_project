@@ -146,19 +146,22 @@ class FieldFile(BaseFieldFile):
 
 
 class FileField(CheckVerboseNameAttributeMixin, models.FileField):
+
     """
     기존 FileField에서 확장자, 용량 관련 옵션 추가
-    kwargs:
-        allowed_content_types(optional) - list containing allowed content_types.
-          Example: ['pdf', 'png', 'jpg', 'jpeg']
-        max_upload_size(optional) - a number indicating the maximum file size allowed for upload.
-          Examples
-           - 1024 # 1kb
-           - 10 * 1024 # 10kb
-           - 10 * 1024 * 1024 # 10mb
-           - 1kb
-           - 10mb
-           - 1g or 10g
+    Kwargs:
+        allowed_content_types (bool, optional) - list containing allowed content_types.
+          Example: 
+           - ['pdf', 'png', 'jpg', 'jpeg']
+
+        max_upload_size (bool, optional) - a number indicating the maximum file size allowed for upload.
+          Examples:
+            - 1024 # 1kb
+            - 10 * 1024 # 10kb
+            - 10 * 1024 * 1024 # 10mb
+            - 1kb
+            - 10mb
+            - 1g or 10g
     """
     attr_class = FieldFile
 
