@@ -6,7 +6,7 @@
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  */
 
-.skip-to-content-link, .base-svgs, nav[aria-label="Breadcrumbs"]{
+.skip-to-content-link, .base-svgs, nav[aria-label="Breadcrumbs"], nav[aria-label="사용자 위치"]{
   display: hidden;
   visibility: hidden;
   height: 0;
@@ -69,7 +69,7 @@
   --bs-body-font-weight: 400;
   --bs-body-line-height: 1.5;
   --bs-body-color: #212529;
-  --bs-body-bg: #f1f1f1;
+  --bs-body-bg: #f1f1f1 !important;
 }
 
 *,

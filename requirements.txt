@@ -1,4 +1,6 @@
+aiofiles
 Django
+django-admin-sortable2
 django-ckeditor
 django-cleanup
 django-dotenv

@@ -2,17 +2,21 @@ import mimetypes
 import re
 import unicodedata
 import os
+import aiofiles
 
 from functools import lru_cache
 from urllib.parse import quote
 from pathlib import _PosixFlavour, _WindowsFlavour
 from pathlib import Path as PathOrigin
 from pathlib import PurePath as PurePathOrigin
-from django.http import Http404, HttpResponse, FileResponse
+from django.http import Http404, HttpResponse, FileResponse, StreamingHttpResponse
 
 # from django.views.static import serve
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+
+MAX_LOAD_VOLUME = settings.STREAM_MAX_LOAD_VOLUME
+RANGE_RE = re.compile(settings.STREAM_RANGE_HEADER_REGEX_PATTERN, re.I)
 
 
 class PurePath(type(PurePathOrigin())):
@@ -27,12 +31,12 @@ class Path(type(PathOrigin())):
 
 async def file_iterator(file_name, chunk_size=8192, offset=0, length=None):
     """iterate file chunk by chunk in generator mode"""
-    with open(file_name, "rb") as f:
-        f.seek(offset, os.SEEK_SET)
+    async with aiofiles.open(file_name, "rb") as f:
+        await f.seek(offset, os.SEEK_SET)
         remaining = length
         while True:
             bytes_length = chunk_size if remaining is None else min(remaining, chunk_size)
-            data = f.read(bytes_length)
+            data = await f.read(bytes_length)
             if not data:
                 break
             if remaining:
@@ -40,16 +44,17 @@ async def file_iterator(file_name, chunk_size=8192, offset=0, length=None):
             yield data
 
 
-async def dev(request, filename, **kwargs):
-    size = os.path.getsize(filename)
+async def dev(request, filename, offset=0, size=None, status=200, **kwargs):
+    if not size:
+        size = os.path.getsize(filename)
 
     response = FileResponse(
         file_iterator(
             filename,
-            offset=0,
+            offset=offset,
             length=size
         ),
-        # status=206,
+        status=status,
     )
     response['Content-length'] = size
 
@@ -91,7 +96,6 @@ def _convert_file_to_url(path):
 
 
 def _sanitize_path(filepath, root_path=None):
-
     if not root_path:
         try:
             path_root = Path(getattr(settings, 'SENDFILE_ROOT', None))
@@ -134,12 +138,16 @@ async def sendfile(request, filename, attachment=False, attachment_filename=None
     filename (using the standard Python mimetypes module)
     """
     filepath_obj = _sanitize_path(filename, root_path)
-    _sendfile = _get_sendfile()
 
     if not filepath_obj.exists() or not filepath_obj.is_file():
         raise Http404(f'"{filename}" does not exist')
 
     content_type, guessed_encoding = mimetypes.guess_type(str(filepath_obj))
+
+    if content_type and content_type.startswith("video"):
+        return await get_streaming_response(request, str(filepath_obj), filepath_obj, content_type)
+
+    _sendfile = _get_sendfile()
 
     if mimetype is None:
         if content_type:
@@ -170,12 +178,69 @@ async def sendfile(request, filename, attachment=False, attachment_filename=None
 
     # response['Content-length'] = filepath_obj.stat().st_size
     response['Connection'] = "Keep-Alive"
-    # response['Connection'] = "Keep-Alive"
 
     if not encoding:
         encoding = guessed_encoding
 
     if encoding:
         response['Content-Encoding'] = encoding
+
+    return response
+
+
+def get_first_byte(request):
+    range_header = request.META.get('HTTP_RANGE', '').strip()
+    if not range_header:
+        return 0
+
+    range_match = RANGE_RE.match(range_header)
+    if range_match:
+        first_byte, _ = range_match.groups()
+        return int(first_byte) if first_byte else 0
+
+    return 0
+
+
+def get_last_byte(first_byte, size):
+    last_byte = first_byte + 1024 * 1024 * MAX_LOAD_VOLUME
+
+    if last_byte >= size:
+        last_byte = size - 1
+
+    return last_byte
+
+
+def get_size(filename):
+    return os.path.getsize(filename)
+
+
+async def get_streaming_response(request, filename, filepath_obj, content_type,
+                                 first_byte=None, last_byte=None, size=None):
+    if not size:
+        size = get_size(filename)
+
+    if not first_byte:
+        first_byte = get_first_byte(request)
+
+    if not last_byte:
+        last_byte = get_last_byte(first_byte, size)
+
+    length = last_byte - first_byte + 1
+
+    _sendfile = _get_sendfile()
+    response = await _sendfile(
+        request=request,
+        filename=filename,
+        status=206,
+        offset=first_byte,
+        size=length,
+    )
+
+    response['Content-Range'] = f'bytes {first_byte}-{last_byte}/{size}'
+    response['Content-Type'] = content_type
+    response['Connection'] = "Keep-Alive"
+
+    response['X-Accel-Buffering'] = 'no'
+    response['Accept-Ranges'] = response['Content-Range']
 
     return response

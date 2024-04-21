@@ -2,7 +2,7 @@ from django.core.exceptions import FieldError
 from django.db.models import Q
 
 from rest_framework import viewsets
-from rest_framework.viewsets import mixins
+from rest_framework.viewsets import mixins, ViewSet
 
 from base_project.logger import logger
 

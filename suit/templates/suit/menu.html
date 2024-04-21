@@ -1,4 +1,5 @@
-{% load i18n suit_menu suit_tags %}
+{% load i18n suit_menu suit_tags admin_tags %}
+
 
 {% get_menu request as menu %}
 {% with suit_layout='layout'|suit_conf:request %}
@@ -11,6 +12,16 @@
                     {% endif %}
                 {% endfor %}
             {% endif %}
+          </br></br>
+          <li>
+            {% storage_info as storage_info_dict %}
+            <a>
+              -- STORAGE INFO -- </br>
+              {% for k, v in storage_info_dict.items %}
+               {{ k }} : {{ v }} </br>
+              {% endfor %}
+            </a>
+          </li>
         </ul>
         {% if menu.aligned_right_menu_items %}
             <ul class="suit-nav-right">

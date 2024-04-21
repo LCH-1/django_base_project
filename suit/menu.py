@@ -53,6 +53,7 @@ def add_url_params(url, params):
 
     return new_url
 
+
 class ChildItem(object):
     def __init__(self, label=None, model=None, url=None, target_blank=False, permissions=None, params=None):
         self.label = label
@@ -166,6 +167,11 @@ class MenuManager(object):
         Make dictionary of native apps and models for easier matching
         """
         for native_app in self.available_apps:
+            app_label = native_app['app_label']
+
+            if app_label == "log_export":
+                continue
+
             app_key = native_app['app_url'].split('/')[-2]
             self._available_apps['apps'][app_key] = native_app
             for native_model in native_app['models']:

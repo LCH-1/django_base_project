@@ -20,8 +20,15 @@ class DefaultErrorMessageMixin:
 
     def bind(self, field_name, parent):
         super().bind(field_name, parent)
-        self.verbose_name = f"{self.label[0].lower()}{self.label[1:]}"
+
+        if self.label:
+            self.verbose_name = f"{self.label[0].lower()}{self.label[1:]}"
+        else:
+            self.verbose_name = ""
+
         self.capital_verbose_name = force_str(self.label)
+        # self.verbose_name = _(field_name)
+        # self.capital_verbose_name = _(field_name).capitalize()
 
         self.custom_format_mapping = {
             "{verbose_name}": f"{self.verbose_name}",
@@ -33,6 +40,9 @@ class DefaultErrorMessageMixin:
         }
 
     def fail(self, key, **kwargs):
+        """
+        A helper method that simply raises a validation error.
+        """
         try:
             msg = self.error_messages[key]
         except KeyError:
@@ -70,12 +80,12 @@ class FileField(DefaultErrorMessageMixin, fields.FileField):
         except (AttributeError, ValueError):
             return None
 
-        if url.startswith("/api/fileserver/protected/"):
-            url = url.split("/")
-            url[-1] = str(self.parent.instance.pk)
-            url = "/".join(url)
+        # if url.startswith("/api/fileserver/protected/"):
+        #     url = url.split("/")
+        #     url[-1] = str(self.parent.instance.pk)
+        #     url = "/".join(url)
 
-            return url
+        #     return url
 
         return url
 

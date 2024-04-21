@@ -6,6 +6,12 @@ from datetime import datetime
 
 from django.utils.deconstruct import deconstructible
 from django.core.cache import cache
+from django.core.mail import send_mail as django_send_mail
+from django.conf import settings
+
+from base_project.logger import logger
+
+from smtplib import SMTPSenderRefused
 
 
 @deconstructible
@@ -13,7 +19,7 @@ class FilenameObfusecate:
     """
     filefield에 업로드 되는 파일의 파일명을 무작위로 변경할 때 사용
     """
-    
+
     def __init__(self, sub_path):
         self.path = sub_path
 
@@ -37,22 +43,22 @@ def ends_with_jong(kstr):
 
 def ul(kstr):
     end = "을" if ends_with_jong(kstr) else "를"
-    return end
+    return f'{end}'
 
 
 def yi(kstr):
     end = "이" if ends_with_jong(kstr) else "가"
-    return end
+    return f'{end}'
 
 
 def wa(kstr):
     end = "과" if ends_with_jong(kstr) else "와"
-    return end
+    return f'{end}'
 
 
 def en(kstr):
     end = "은" if ends_with_jong(kstr) else "는"
-    return end
+    return f'{end}'
 
 
 def get_select_related_fields(model):
@@ -109,6 +115,30 @@ def get_client_ip(request):
     """
     사용자 ip 주소 반환
     """
+    if x_forwarded_for := request.META.get('HTTP_X_FORWARDED_FOR'):
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+
+    return ip
+
+
+def send_mail(to, title, content):
+    if isinstance(to, str):
+        to = [to]
+    try:
+        django_send_mail(
+            title,
+            content,
+            settings.EMAIL_HOST_USER,
+            to,
+            fail_silently=False,
+        )
+    except SMTPSenderRefused:
+        logger.error(f"{to} email이 유효하지 않습니다.")
+
+
+def get_client_ip(request):
     if x_forwarded_for := request.META.get('HTTP_X_FORWARDED_FOR'):
         ip = x_forwarded_for.split(',')[0]
     else:

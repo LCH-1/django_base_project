@@ -117,6 +117,7 @@ class CustomLogger(logging.Logger):
 
     def findCaller(self, stack_info=False, stacklevel=1):
         # 정확한 filename 추적을 위해 stacklevel 수정
+        return super().findCaller(stack_info, stacklevel=3)
         if settings.IS_LOCAL:
             return super().findCaller(stack_info, stacklevel=3)
 

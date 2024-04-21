@@ -1,7 +1,7 @@
 import uuid
 
 from django.db import models, IntegrityError
-from django.db.models import SET_NULL, CASCADE, UniqueConstraint, Manager
+from django.db.models import SET_NULL, CASCADE, UniqueConstraint, Manager, F, Q, Avg, Sum, Count
 from django.db.models.fields.files import FieldFile as BaseFieldFile
 from django.core import checks, validators
 from django.core.exceptions import ValidationError
@@ -65,6 +65,7 @@ class CheckVerboseNameAttributeMixin:
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.verbose_name = self.verbose_name.replace("_", " ").strip() if isinstance(self.verbose_name, str) else self.verbose_name
 
     def _check_verbose_name_attribute(self, **kwargs):
         if not self._verbose_name:
@@ -142,11 +143,22 @@ class FieldFile(BaseFieldFile):
 
     @property
     def url(self):
+        if not self:
+            return ""
+
         return self._get_path(super().url)
+
+    @property
+    def size(self):
+        if self:
+            return super().size
+        return 0
+
+    # def __str__(self):
+    #     return self._get_path(self.name)
 
 
 class FileField(CheckVerboseNameAttributeMixin, models.FileField):
-
     """
     기존 FileField에서 확장자, 용량 관련 옵션 추가
     Kwargs:
@@ -169,7 +181,7 @@ class FileField(CheckVerboseNameAttributeMixin, models.FileField):
         self.obfuscated = kwargs.pop('obfuscated', True)
         self.protected = kwargs.pop('protected', False)
         self._upload_to = kwargs.pop('upload_to', None)
-        self.allowed_content_types = kwargs.pop("allowed_content_types", [])
+        self.allowed_content_types = [x.lower() for x in kwargs.pop("allowed_content_types", [])]
         self.max_upload_size = kwargs.pop("max_upload_size", 0)
 
         super().__init__(*args, **kwargs)
@@ -184,6 +196,8 @@ class FileField(CheckVerboseNameAttributeMixin, models.FileField):
             content_type = data.content_type.split("/")[1]  # TODO 확장자 가져오는거 체크
         except:
             content_type = data.name.rsplit(".")[-1]
+
+        content_type = content_type.lower()
 
         if self.allowed_content_types and content_type not in self.allowed_content_types:
             raise ValidationError('Filetype not supported.')
@@ -302,3 +316,97 @@ class FloatField(CheckVerboseNameAttributeMixin, models.FloatField):
 
 class URLField(CheckVerboseNameAttributeMixin, models.URLField):
     pass
+
+
+class OrderModelMixin(models.Model):
+    order = models.IntegerField("순서", default=0, db_index=True)
+
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        instance = super().from_db(db, field_names, values)
+        instance._loaded_values = dict(zip(field_names, values))
+
+        return instance
+
+    # def _save_with_order(self, parent):
+    def _save_with_order(self, order, parent):
+        if parent:
+            parent_obj = getattr(self, parent.name)
+            queryset = getattr(parent_obj, parent._related_name).exclude(**{order: 0})
+
+        else:
+            queryset = self._meta.model.objects.exclude(**{order: 0})
+
+        # 새로 생성하는 경우
+        previous_order = getattr(self, "_loaded_values", {}).get(order, None)
+
+        if not previous_order or not self.pk:
+            order_instances = queryset.filter(**{f"{order}__gte": getattr(self, order)})
+            order_instances.update(**{order: F(order) + 1})
+
+        # 같은 값으로 수정하는 경우
+        elif previous_order == getattr(self, order):
+            pass
+
+        # 순서를 앞으로 당기는 경우
+        elif previous_order > getattr(self, order):
+            order_instances = queryset.filter(**{f"{order}__gte": getattr(self, order), f"{order}__lt": previous_order})
+            order_instances.update(**{order: F(order) + 1})
+
+        # 순서를 뒤로 미루는 경우
+        else:
+            order_instances = queryset.filter(**{f"{order}__gt": previous_order, f"{order}__lte": getattr(self, order)})
+            order_instances.update(**{order: F(order) - 1})
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None, parent=None, order=None):
+        if not order:
+            order = ["order"]
+
+        for order_ in order:
+            self._save_with_order(order_, parent)
+
+        return super().save(force_insert, force_update, using, update_fields)
+
+    def save_(self):
+        return super().save()
+
+    def _delete_with_order(self, order, idx):
+        model = self._meta.model
+        order_instances = model.objects.filter(**{f"{order}__gt": getattr(self, order) - idx})
+        order_instances.update(**{order: F(order) - 1})
+
+    def delete(self, using=None, keep_parents=False, idx=0, order=None):
+        if not order:
+            order = ["order"]
+
+        for order_ in order:
+            self._delete_with_order(order_, idx)
+
+        return super().delete(using, keep_parents)
+
+    @staticmethod
+    def _set_order(order, queryset):
+        for i, instance in enumerate(queryset.order_by("order", "pk"), 1):
+            # instance.order = i
+            setattr(instance, order, i)
+            instance.save_()
+
+    @classmethod
+    def sorting(cls, order=None, parent=None):
+        if not order:
+            order = "order"
+
+        if not parent:
+            cls._set_order(order, cls.objects.all())
+            return
+
+        parent_remote_field = getattr(cls, parent).field.remote_field
+        parent_model = parent_remote_field.model
+        related_name = parent_remote_field.related_name
+
+        for parent_obj in parent_model.objects.all():
+            cls._set_order(order, getattr(parent_obj, related_name).all())
+
+    class Meta:
+        abstract = True
+        ordering = ['order', 'pk']

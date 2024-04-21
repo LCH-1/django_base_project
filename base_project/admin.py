@@ -1,5 +1,4 @@
 from functools import partial
-from typing import Any
 
 from django.contrib import admin
 from django.contrib.admin import helpers, StackedInline, display
@@ -17,6 +16,120 @@ from django.utils.html import format_html
 from django.utils.encoding import force_str
 from django.utils.safestring import mark_safe
 from django.core.exceptions import PermissionDenied, FieldDoesNotExist
+
+from adminsortable2.admin import SortableAdminMixin as BaseSortableAdminMixin
+from adminsortable2.admin import SortableTabularInline, SortableInlineAdminMixin
+
+from base_project import models
+from base_project.utils import get_client_ip
+from base_project.forms import OrderForm
+
+
+class LogMixin:
+    def __init__(self, model, admin_site):
+        self.origin_obj = None
+        super().__init__(model, admin_site)
+
+    def save_model(self, request, obj, form, change):
+        if change:
+            self.origin_obj = obj.__class__.objects.get(pk=obj.pk)
+        return super().save_model(request, obj, form, change)
+
+    def log_addition(self, request, obj, message):
+        adds = []
+
+        for field in obj._meta.fields:
+            adds.append(f"{field.name}: {getattr(obj, field.name)}")
+
+        message = "\n".join(adds)
+
+        return super().log_addition(request, obj, message)
+
+    def log_change(self, request, obj, message):
+        original_object = self.origin_obj
+
+        if not original_object:
+            return super().log_change(request, obj, message)
+
+        changes = [f"ip : {get_client_ip(request)}\n"]
+
+        for field in obj._meta.fields:
+            if getattr(original_object, field.name) != getattr(obj, field.name):
+                changes.append(f"{field.name}: {getattr(original_object, field.name)} -> {getattr(obj, field.name)}")
+
+        message = "\n".join(changes)
+
+        return super().log_change(request, obj, message)
+
+
+class DefaultOrderingAdminMixin:
+    ordering = ['-pk']
+
+
+class OrderInlineMixin:
+    # form = OrderForm
+    ordering = ['order', 'pk']
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        field = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == 'order':
+            field.widget.attrs['style'] = 'width: 60px;'
+        return field
+
+
+class SortableAdminMixin(BaseSortableAdminMixin):
+    # form = OrderForm
+    ordering = ['order', 'pk']
+
+    def get_form(self, request, obj=None, **kwargs):
+        if not getattr(self.form, "is_order_form", None):
+            self.form = type(self.form.__name__, (OrderForm, self.form), {})
+
+        return super().get_form(request, obj, **kwargs)
+
+    def get_fields(self, request, obj=None):
+        return super(BaseSortableAdminMixin, self).get_fields(request, obj)
+
+    def save_model(self, request, obj, form, change):
+        return super(BaseSortableAdminMixin, self).save_model(request, obj, form, change)
+
+    def delete_queryset(self, request, queryset):
+        for i, obj in enumerate(queryset):
+            obj.delete(idx=i)
+
+    def get_ordering(self, request):
+        return self.ordering
+
+
+class DynamicOrderInheritanceMixin:
+    def __init__(self, *args, model, class_, **kwargs):
+        class_obj = self.set_inherit_class(model, class_)
+        super(*class_obj).__init__(*args, **kwargs)
+
+    def set_inherit_class(self, model, class_):
+        if not issubclass(model, models.OrderModelMixin) or issubclass(self.__class__, class_):
+            return []
+
+        class_name = self.__class__.__name__
+        new_bases = (class_, self.__class__)
+        new_class = type(class_name, new_bases, {"ordering": ['order', 'pk']})
+        self.__class__ = new_class
+
+        return [new_class, self]
+
+
+class DynamicOrderInheritanceAdminMixin(DynamicOrderInheritanceMixin):
+    def __init__(self, model, admin_site):
+        # new_class = self.set_inherit_class(model, SortableAdminMixin)
+
+        super().__init__(model, admin_site, model=model, class_=SortableAdminMixin)
+
+
+class DynamicOrderInheritanceInlineMixin(DynamicOrderInheritanceMixin):
+    def __init__(self, parent_model, admin_site):
+        # new_class = self.set_inherit_class(self.model, SortableInlineAdminMixin)
+
+        super().__init__(parent_model, admin_site, model=self.model, class_=SortableInlineAdminMixin)
 
 
 class ReadOnlyMixin:
@@ -141,9 +254,12 @@ class AdminMixin:
             return super().get_readonly_fields(request, obj)
 
         readonly_fields = list(super().get_readonly_fields(request, obj))
+
         if not self.disable_auto_readonly_fields:
             model_fields = self.model._meta.fields
+            model_mtm_fields = self.model._meta.many_to_many
             model_field_names = [field.name for field in model_fields]
+            model_field_names += [field.name for field in model_mtm_fields]
 
             auto_readonly_fields = [obj._meta.pk.name]
             auto_readonly_fields += [field.name for field in model_fields if not getattr(field, 'editable', True)]
@@ -201,10 +317,20 @@ class AdminSite(admin.AdminSite):
         #     app_dict.values(),
         #     key=lambda x: x['name'].lower()
         # )
-        app_list = app_dict.values()
+        app_list = list(app_dict.values())
 
         for app in app_list:
             app['models'].sort(key=lambda x: self._registry_order.index(x['model']))
+
+        # app_list.append({
+        #     "name": "",
+        #     "app_label": "",
+        #     "app_url": "",
+        #     "models": [
+        #         {"admin_url": "",
+        #          "name": "", },
+        #     ],
+        # })
 
         return app_list
 

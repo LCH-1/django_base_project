@@ -2,7 +2,7 @@
 <fieldset class="suit-form module aligned {{ fieldset.classes }}">
     {% if fieldset.name %}<h2>{{ fieldset.name }}</h2>{% endif %}
     {% if fieldset.description %}
-        <div class="description">{{ fieldset.description|safe }}</div>
+        <div class="description">{{ fieldset.description }}</div>
     {% endif %}
     {% for line in fieldset %}
         {% with is_single=line.fields|length_is:'1' %}
@@ -40,7 +40,7 @@
                     </div>
                 {% endif %}
                 {% if field.field.help_text %}
-                    <small class="text-help">{{ field.field.help_text|safe }}</small>
+                    <small class="text-help">{{ field.field.help_text }}</small>
                 {% endif %}
 
                 {# Close multi-field #}

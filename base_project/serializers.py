@@ -3,11 +3,6 @@ from django.db.models import FileField as BaseFileField
 from rest_framework import serializers
 from rest_framework.serializers import BaseSerializer
 from rest_framework.exceptions import ErrorDetail, ValidationError
-# from rest_framework.fields import (
-#     BooleanField, CharField, ChoiceField, DateField, DateTimeField, EmailField,
-#     IntegerField, SerializerMethodField, TimeField, IPAddressField
-# )
-from rest_framework.fields import SerializerMethodField
 
 from base_project import models
 from base_project.fields import (
@@ -15,7 +10,6 @@ from base_project.fields import (
     TimeField, DurationField, EmailField, IntegerField, FloatField,
     PrimaryKeyRelatedField, ChoiceField, URLField,
 )
-from base_project.utils import ul
 
 
 class ResponseErrorSerializerMixin:
@@ -62,9 +56,7 @@ class Serializer(ResponseErrorSerializerMixin, serializers.Serializer):
 class ModelSerializer(ResponseErrorSerializerMixin, serializers.ModelSerializer):
     """
     default error message 및 커스텀 옵션들을 적용하기 위해 serializer field mapping 재정의
-
     """
-
     serializer_field_mapping = serializers.ModelSerializer.serializer_field_mapping
     serializer_field_mapping[models.BooleanField] = BooleanField
     serializer_field_mapping[models.CharField] = CharField
