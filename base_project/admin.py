@@ -19,7 +19,7 @@ from django.utils.safestring import mark_safe
 from django.core.exceptions import PermissionDenied, FieldDoesNotExist
 
 
-class ReadonlyMixin:
+class ReadOnlyMixin:
     """
 
     model을 admin에서 수정할 수 없도록 함
@@ -36,7 +36,7 @@ class ReadonlyMixin:
         return False
 
 
-class ReadonlyInlineMixin(ReadonlyMixin):
+class ReadOnlyInlineMixin(ReadOnlyMixin):
     """
     Inline model을 admin에서 수정할 수 없도록 함
     """
@@ -91,7 +91,7 @@ class AdminMixin:
         """
         if not obj:
             inlines = super().get_inlines(request, obj)
-            return [x for x in inlines if not issubclass(x, ReadonlyInlineMixin)]
+            return [x for x in inlines if not issubclass(x, ReadOnlyInlineMixin)]
 
         return super().get_inlines(request, obj)
 
