@@ -7,5 +7,6 @@ django-dotenv
 djangorestframework
 drf-spectacular
 drf-spectacular-sidecar
+martor
 rich
 uvicorn

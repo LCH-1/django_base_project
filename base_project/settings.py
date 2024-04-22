@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 from os import environ as env
 
 from pathlib import Path
@@ -16,30 +17,30 @@ PROJECT_NAME = os.path.basename(PROJECT_ROOT)
 SECRET_KEY = env.get('SECRET_KEY', ' ')
 DEBUG = env.get('DEBUG', '1') == '1'
 IS_LOCAL = env.get("IS_LOCAL", "1") == '1'  # local에서 test할 때 사용, 배포 환경에서는 False로 설정
+URL_MODE = os.environ.get('URL_MODE', 'ALL')
+if os.path.exists('.env'):
+    from dotenv import read_dotenv
+    read_dotenv(BASE_DIR)
 
 # db unique intergrity validation 메세지 변경
 Field.default_error_messages.update({
     "unique": "이미 존재하는 %(field_label)s입니다.",
 })
 
-
-ALLOWED_HOSTS = [
-    "backend", "backend:8000",
-    "localhost", "localhost:3000",
-    "127.0.0.1", "127.0.0.1:3000",
-]
-
-if os.path.exists('.env'):
-    from dotenv import read_dotenv
-    read_dotenv(BASE_DIR)
-
 if DEBUG:
     ALLOWED_HOSTS = ['*']
-    CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000", ]
+    CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000", "https://chlee.cf"]
 
 else:
     ALLOWED_HOSTS = ['']
     CSRF_TRUSTED_ORIGINS = []
+
+ALLOWED_HOSTS += [
+    "backend", "backend:8000",
+    "localhost", "localhost:3000",
+    "127.0.0.1", "127.0.0.1:3000",
+    "chlee.cf",
+]
 
 CSRF_TRUSTED_ORIGINS += [f"http://{x}" for x in ALLOWED_HOSTS]
 CSRF_TRUSTED_ORIGINS += [f"https://{x}" for x in ALLOWED_HOSTS]
@@ -93,6 +94,7 @@ if DEBUG:
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -127,7 +129,29 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = f'{PROJECT_NAME}.wsgi.application'
+CKEDITOR_UPLOAD_PATH = 'ckeditor/uploads/'
 
+# markdown setup
+MARTOR_ENABLE_CONFIGS = {
+    'emoji': 'false',        # to enable/disable emoji icons.
+    'imgur': 'true',        # to enable/disable imgur/custom uploader.
+    'mention': 'false',   # to enable/disable mention
+    'jquery': 'true',    # to include/revoke jquery (require for admin default django)
+    'living': 'true',      # to enable/disable live updates in preview
+    'spellcheck': 'false',  # to enable/disable spellcheck in form textareas
+    'hljs': 'true',         # to enable/disable hljs highlighting in preview
+}
+
+MARTOR_ENABLE_ADMIN_CSS = False
+
+MARTOR_UPLOAD_PATH = 'images/uploads/{}'.format(time.strftime("%Y/%m/%d/"))
+MARTOR_UPLOAD_URL = 'uploader/'  # change to local uploader
+MARTOR_MARKDOWNIFY_URL = 'markdownify/'
+MARTOR_SEARCH_USERS_URL = 'search-user/'
+
+
+MARTOR_ENABLE_LABEL = True
+MAX_IMAGE_UPLOAD_SIZE = 5242880  # 5MB
 
 # Database
 # 환경변수에 POSTGRESQL_DB가 있을 경우 postgres에 연결 시도
@@ -175,6 +199,10 @@ TIME_ZONE = 'Asia/Seoul'
 USE_I18N = True
 USE_L10N = True
 
+LOCALE_PATHS = [
+    os.path.join(PROJECT_ROOT, 'locale'),
+]
+
 USE_TZ = False  # timezone을 사용하지 않음
 
 MEDIA_URL = 'api/fileserver/'
@@ -186,6 +214,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, MEDIA_DIR)
 SENDFILE_ROOT = MEDIA_ROOT
 SENDFILE_URL = '/protected'
 """ sendfile end """
+
+""" stream setting start """
+STREAM_MAX_LOAD_VOLUME = 4
+STREAM_RANGE_HEADER_REGEX_PATTERN = r'bytes\s*=\s*(\d+)\s*-\s*(\d*)'
+""" stream setting end """
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'static'
@@ -347,6 +380,7 @@ CKEDITOR_CONFIGS = {
             [
                 "Styles",
                 "Format",
+                "FontSize",
                 "Bold",
                 "Italic",
                 "Underline",
