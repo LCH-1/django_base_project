@@ -18,10 +18,10 @@ class SearchQuerysetMixin:
       searches = {
           'category': {
               'fields': ['category'],
-          }
+          },
           'search': {
               'fields': ['title', 'contents'],
-              'type': 'icontains'
+              'type': 'icontains',
           },
       }
     """
