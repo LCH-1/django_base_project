@@ -198,12 +198,15 @@ TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
 USE_L10N = True
+USE_TZ = True
 
 LOCALE_PATHS = [
     os.path.join(PROJECT_ROOT, 'locale'),
 ]
 
-USE_TZ = False  # timezone을 사용하지 않음
+LANGUAGES = [
+    ('ko', 'Korean'),
+]
 
 MEDIA_URL = 'api/fileserver/'
 MEDIA_DIR = 'media'

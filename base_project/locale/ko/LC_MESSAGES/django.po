@@ -1,0 +1,186 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-05-27 00:56+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: .\base_project\fields.py:17 .\base_project\fields.py:170
+#, python-brace-format
+msgid "{capital_verbose_name}'s input is required."
+msgstr "{capital_verbose_name}의 입력이 필요합니다."
+
+#: .\base_project\fields.py:18 .\base_project\fields.py:96
+#, python-brace-format
+msgid "The {verbose_name} is cannot be empty."
+msgstr "{verbose_name}는 비어 있을 수 없습니다."
+
+#: .\base_project\fields.py:70
+#, python-brace-format
+msgid "No {verbose_name} file was submitted."
+msgstr "{verbose_name} 파일이 제출되지 않았습니다."
+
+#: .\base_project\fields.py:71
+#, python-brace-format
+msgid ""
+"The submitted {verbose_name} data was not a file. Check the encoding type on "
+"the form."
+msgstr "제출된 {verbose_name} 데이터가 파일이 아닙니다. 양식의 인코딩 유형을 확인하세요."
+
+#: .\base_project\fields.py:72
+#, python-brace-format
+msgid "No {verbose_name} filename could be determined."
+msgstr "{verbose_name} 파일 이름을 확인할 수 없습니다."
+
+#: .\base_project\fields.py:73
+#, python-brace-format
+msgid "The submitted {verbose_name} file is empty."
+msgstr "제출된 {verbose_name} 파일이 비어 있습니다."
+
+#: .\base_project\fields.py:74
+#, python-brace-format
+msgid ""
+"Ensure {verbose_name} filename has at most {max_length} characters (it has "
+"{length})."
+msgstr "{verbose_name} 파일 이름이 최대 {max_length}자 이하인지 확인하세요 (현재 {length}자)."
+
+#: .\base_project\fields.py:95
+#, python-brace-format
+msgid "Not a valid {verbose_name} string."
+msgstr "유효한 {verbose_name} 문자열이 아닙니다."
+
+#: .\base_project\fields.py:97
+#, python-brace-format
+msgid "Ensure {verbose_name} has no more than {max_length} characters."
+msgstr "{verbose_name}가 {max_length}자 이하인지 확인하세요."
+
+#: .\base_project\fields.py:98
+#, python-brace-format
+msgid "Ensure {verbose_name} has at least {min_length} characters."
+msgstr "{verbose_name}가 최소 {min_length}자 이상인지 확인하세요."
+
+#: .\base_project\fields.py:104
+#, python-brace-format
+msgid "{capital_verbose_name} must be a valid boolean."
+msgstr "{capital_verbose_name}는 유효한 불리언이어야 합니다."
+
+#: .\base_project\fields.py:110
+#, python-brace-format
+msgid ""
+"{capital_verbose_name}'s date has wrong format. Use one of these formats "
+"instead: {format}."
+msgstr "{capital_verbose_name}의 날짜 형식이 잘못되었습니다. 대신 다음 형식 중 하나를 사용하세요: {format}."
+
+#: .\base_project\fields.py:111
+#, python-brace-format
+msgid "{capital_verbose_name}'s xpected a date but got a datetime."
+msgstr "{capital_verbose_name}는 날짜를 예상했지만 datetime을 받았습니다."
+
+#: .\base_project\fields.py:117
+#, python-brace-format
+msgid ""
+"{capital_verbose_name} has wrong format. Use one of these formats instead: "
+"{format}."
+msgstr "{capital_verbose_name}의 형식이 잘못되었습니다. 대신 다음 형식 중 하나를 사용하세요: {format}."
+
+#: .\base_project\fields.py:118
+#, python-brace-format
+msgid "Expected a {verbose_name} datetime but got a date."
+msgstr "{verbose_name} datetime을 예상했지만 날짜를 받았습니다."
+
+#: .\base_project\fields.py:119
+msgid "Invalid {verbose_name} datetime for the timezone \"{timezone}\"."
+msgstr "시간대 \"{timezone}\"에 대한 유효하지 않은 {verbose_name} datetime입니다."
+
+#: .\base_project\fields.py:120
+#, python-brace-format
+msgid "{capital_verbose_name} datetime value out of range."
+msgstr "{capital_verbose_name} datetime 값이 범위를 벗어났습니다."
+
+#: .\base_project\fields.py:126
+#, python-brace-format
+msgid ""
+"{capital_verbose_name} time has wrong format. Use one of these formats "
+"instead: {format}."
+msgstr "{capital_verbose_name}의 시간이 잘못된 형식입니다. 대신 다음 형식 중 하나를 사용하세요: {format}."
+
+#: .\base_project\fields.py:132
+#, python-brace-format
+msgid ""
+"{capital_verbose_name} duration has wrong format. Use one of these formats "
+"instead: {format}."
+msgstr "{capital_verbose_name}의 기간 형식이 잘못되었습니다. 대신 다음 형식 중 하나를 사용하세요: {format}."
+
+#: .\base_project\fields.py:133 .\base_project\fields.py:147
+#, python-brace-format
+msgid "Ensure {verbose_name} value is less than or equal to {max_value}."
+msgstr "{verbose_name} 값이 {max_value} 이하인지 확인하세요."
+
+#: .\base_project\fields.py:134 .\base_project\fields.py:148
+#, python-brace-format
+msgid "Ensure {verbose_name} value is greater than or equal to {min_value}."
+msgstr "{verbose_name} 값이 {min_value} 이상인지 확인하세요."
+
+#: .\base_project\fields.py:140
+#, python-brace-format
+msgid "Enter a valid {verbose_name} email address."
+msgstr "유효한 {verbose_name} 이메일 주소를 입력하세요."
+
+#: .\base_project\fields.py:146
+#, python-brace-format
+msgid "A valid {verbose_name} integer is required."
+msgstr "유효한 {verbose_name} 정수가 필요합니다."
+
+#: .\base_project\fields.py:149 .\base_project\fields.py:158
+#, python-brace-format
+msgid "{capital_verbose_name} string value too large."
+msgstr "{capital_verbose_name} 문자열 값이 너무 큽니다."
+
+#: .\base_project\fields.py:155
+#, python-brace-format
+msgid "A valid {verbose_name} number is required."
+msgstr "유효한 {verbose_name} 숫자가 필요합니다."
+
+#: .\base_project\fields.py:156
+#, python-brace-format
+msgid "Ensure {verbose_name} this value is less than or equal to {max_value}."
+msgstr "{verbose_name} 값이 {max_value} 이하인지 확인하세요."
+
+#: .\base_project\fields.py:157
+#, python-brace-format
+msgid ""
+"Ensure {verbose_name} this value is greater than or equal to {min_value}."
+msgstr "{verbose_name} 값이 {min_value} 이상인지 확인하세요."
+
+#: .\base_project\fields.py:164
+#, python-brace-format
+msgid "Enter a valid {verbose_name} URL."
+msgstr "유효한 {verbose_name} URL을 입력하세요."
+
+#: .\base_project\fields.py:171
+#, python-brace-format
+msgid "Invalid {verbose_name} pk \"{pk_value}\" - object does not exist."
+msgstr "유효하지 않은 {verbose_name} pk \"{pk_value}\" - 객체가 존재하지 않습니다."
+
+#: .\base_project\fields.py:172
+#, python-brace-format
+msgid "Incorrect {verbose_name} type. Expected pk value, received {data_type}."
+msgstr "잘못된 {verbose_name} 타입입니다. 예상된 pk 값: {data_type}"
+
+#: .\base_project\fields.py:178
+#, python-brace-format
+msgid "\"{input}\" is not a valid choice. in {verbose_name}"
+msgstr "\"{input}\"{{은}} {verbose_name}에서 유효한 선택이 아닙니다."
