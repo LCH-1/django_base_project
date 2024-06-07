@@ -3,10 +3,8 @@ from functools import partial
 from django.contrib import admin
 from django.contrib.admin import helpers, StackedInline, display
 from django.contrib.admin.options import InlineModelAdmin
-from django.contrib.admin.sites import AdminSite
 from django.contrib.admin.utils import flatten_fieldsets, unquote
 from django.contrib.admin.options import get_content_type_for_model
-from django.db import models
 from django.db.models import OneToOneField, ForeignKey
 from django.forms import ModelForm
 from django.forms.formsets import all_valid
